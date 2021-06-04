@@ -115,251 +115,199 @@ Here are the high-level definitions for the classes described above.
 
 **Enums, data types, and constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
+public enum BookingStatus {
+  REQUESTED, PENDING, CONFIRMED, CHECKED_IN, CANCELED, ABANDONED
+}
 
+public enum SeatType {
+  REGULAR, PREMIUM, ACCESSIBLE, SHIPPED, EMERGENCY_EXIT, OTHER
+}
 
-class BookingStatus(Enum):
-    REQUESTED, PENDING, CONFIRMED, CHECKED_IN, CANCELED, ABANDONED = 1, 2, 3, 4, 5, 6
+public enum AccountStatus {
+  ACTIVE, BLOCKED, BANNED, COMPROMISED, ARCHIVED, UNKNOWN
+}
 
+public enum PaymentStatus {
+  UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED
+}
 
-class SeatType(Enum):
-    REGULAR, PREMIUM, ACCESSIBLE, SHIPPED, EMERGENCY_EXIT, OTHER = 1, 2, 3, 4, 5, 6
-
-
-class AccountStatus(Enum):
-    ACTIVE, BLOCKED, BANNED, COMPROMISED, ARCHIVED, UNKNOWN = 1, 2, 3, 4, 5, 6
-
-
-class PaymentStatus(Enum):
-    UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-
-
-class Address:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
 ```
 
 **Account, Customer, Admin, FrontDeskOfficer, and Guest:** These classes represent the different people that interact with our system:
 
-```python
-from abc import ABC
-from .constants import AccountStatus
+```java
 
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter method and modified only through their public setter method.
 
-# For simplicity, we are not defining getter and setter functions. The reader can
-# assume that all class attributes are private and accessed through their respective
-# public getter methods and modified only through their public methods function.
+public class Account {
+  private String id;
+  private String password;
+  private AccountStatus status;
 
+  public boolean resetPassword();
+}
 
-class Account:
-    def __init__(self, id, password, status=AccountStatus.Active):
-        self.__id = id
-        self.__password = password
-        self.__status = status
+public abstract class Person {
+  private String name;
+  private Address address;
+  private String email;
+  private String phone;
 
-    def reset_password(self):
-        None
+  private Account account;
+}
 
+public class Customer extends Person {
+  public boolean makeBooking(Booking booking);
+  public List<Booking> getBookings();
+}
 
-# from abc import ABC, abstractmethod
-class Person(ABC):
-    def __init__(self, name, address, email, phone, account):
-        self.__name = name
-        self.__address = address
-        self.__email = email
-        self.__phone = phone
-        self.__account = account
+public class Admin extends Person {
+  public boolean addMovie(Movie movie);
+  public boolean addShow(Show show);
+  public boolean blockUser(Customer customer);
+}
 
+public class FrontDeskOfficer extends Person {
+  public boolean createBooking(Booking booking);
+}
 
-class Customer(Person):
-    def make_booking(self, booking):
-        None
-
-    def get_bookings(self):
-        None
-
-
-class Admin(Person):
-    def add_movie(self, movie):
-        None
-
-    def add_show(self, show):
-        None
-
-    def block_user(self, customer):
-        None
-
-
-class FrontDeskOfficer(Person):
-    def create_booking(self, booking):
-        None
-
-
-class Guest:
-    def register_account(self):
-        None
-
+public class Guest {
+  public bool registerAccount();
+}
 ```
 
 **Show and Movie:** A movie will have many shows:
 
-```python
-from datetime import datetime
+```java
+public class Show {
+  private int showId;
+  private Date createdOn;
+  private Date startTime;
+  private Date endTime;
+  private CinemaHall playedAt;
+  private Movie movie;
+}
 
+public class Movie {
+  private String title;
+  private String description;
+  private int durationInMins;
+  private String language;
+  private Date releaseDate;
+  private String country;
+  private String genre;
+  private Admin movieAddedBy;
 
-class Show:
-    def __init__(self, id, played_at, movie, start_time, end_time):
-        self.__show_id = id
-        self.__created_on = datetime.date.today()
-        self.__start_time = start_time
-        self.__end_time = end_time
-        self.__played_at = played_at
-        self.__movie = movie
+  private List<Show> shows;
+  public List<Show> getShows();
+}
 
-
-class Movie:
-    def __init__(self, title, description, duration_in_mins, language, release_date, country, genre, added_by):
-        self.__title = title
-        self.__description = description
-        self.__duration_in_mins = duration_in_mins
-        self.__language = language
-        self.__release_date = release_date
-        self.__country = country
-        self.__genre = genre
-        self.__movie_added_by = added_by
-
-        self.__shows = []
-
-    def get_shows(self):
-        None
 
 ```
 
 **Booking, ShowSeat, and Payment:** Customers will reserve seats with a booking and make a payment:
 
-```python
-from datetime import datetime
-from .cinema import CinemaHallSeat
+```java 
+public class Booking {
+  private String bookingNumber;
+  private int numberOfSeats;
+  private Date createdOn;
+  private BookingStatus status;
 
+  private Show show;
+  private List<ShowSeat> seats;
+  private Payment payment;
 
-class Booking:
-    def __init__(self, booking_number, number_of_seats, status, show, show_seats, payment):
-        self.__booking_number = booking_number
-        self.__number_of_seats = number_of_seats
-        self.__created_on = datetime.date.today()
-        self.__status = status
-        self.__show = show
-        self.__seats = show_seats
-        self.__payment = payment
+  public boolean makePayment(Payment payment);
+  public boolean cancel();
+  public boolean assignSeats(List<ShowSeat> seats);
+}
 
-    def make_payment(self, payment):
-        None
+public class ShowSeat extends CinemaHallSeat{
+  private int showSeatId;
+  private boolean isReserved;
+  private double price;
+}
 
-    def cancel(self):
-        None
-
-    def assign_seats(self, seats):
-        None
-
-
-class ShowSeat(CinemaHallSeat):
-    def __init__(self, id, is_reserved, price):
-        self.__show_seat_id = id
-        self.__is_reserved = is_reserved
-        self.__price = price
-
-
-class Payment:
-    def __init__(self, amount, transaction_id, payment_status):
-        self.__amount = amount
-        self.__created_on = datetime.date.today()
-        self.__transaction_id = transaction_id
-        self.__status = payment_status
+public class Payment {
+  private double amount;
+  private Date createdOn;
+  private int transactionId;
+  private PaymentStatus status;
+}
 
 ```
 
 **City, Cinema, CinemaHall and CinemaHallSeat:** Each city can have many cinemas and each cinema can have many cinema halls:
 
-```python
-class City:
-    def __init__(self, name, state, zip_code):
-        self.__name = name
-        self.__state = state
-        self.__zip_code = zip_code
+```java 
+public class City {
+  private String name;
+  private String state;
+  private String zipCode;
+}
 
+public class Cinema {
+  private String name;
+  private int totalCinemaHalls;
+  private Address location;
 
-class Cinema:
-    def __init__(self, name, total_cinema_halls, address, halls):
-        self.__name = name
-        self.__total_cinema_halls = total_cinema_halls
-        self.__location = address
+  private List<CinemaHall> halls;
+}
 
-        self.__halls = halls
+public class CinemaHall {
+  private String name;
+  private int totalSeats;
 
-
-class CinemaHall:
-    def __init__(self, name, total_seats, seats, shows):
-        self.__name = name
-        self.__total_seats = total_seats
-
-        self.__seats = seats
-        self.__shows = shows
-
-
-class CinemaHallSeat:
-    def __init__(self, id, seat_type):
-        self.__hall_seat_id = id
-        self.__seat_type = seat_type
+  private List<CinemaHallSeat> seats;
+  private List<Show> shows;
+}
 
 ```
 
 **Search interface and Catalog:** Catalog will implement Search to facilitate searching of products.
 
-```python
-from abc import ABC
+```java
+public interface Search {
+  public List<Movie> searchByTitle(String title);
+  public List<Movie> searchByLanguage(String language);
+  public List<Movie> searchByGenre(String genre);
+  public List<Movie> searchByReleaseDate(Date relDate);
+  public List<Movie> searchByCity(String cityName);
+}
 
+public class Catalog implements Search {
+   HashMap<String, List<Movie>> movieTitles;
+   HashMap<String, List<Movie>> movieLanguages;
+   HashMap<String, List<Movie>> movieGenres;
+   HashMap<Date, List<Movie>> movieReleaseDates;
+   HashMap<String, List<Movie>> movieCities;
 
-class Search(ABC):
-    def search_by_title(self, title):
-        None
+  public List<Movie> searchByTitle(String title) {
+    return movieTitles.get(title);
+  }
 
-    def search_by_language(self, language):
-        None
+  public List<Movie> searchByLanguage(String language) {
+    return movieLanguages.get(language);
+  }
 
-    def search_by_genre(self, genre):
-        None
+  //...
 
-    def search_by_release_date(self, rel_date):
-        None
-
-    def search_by_city(self, city_name):
-        None
-
-
-class Catalog(Search):
-    def __init__(self):
-        self.__movie_titles = {}
-        self.__movie_languages = {}
-        self.__movie_genres = {}
-        self.__movie_release_dates = {}
-        self.__movie_cities = {}
-
-        def search_by_title(self, title):
-            return self.__movie_titles.get(title)
-
-        def search_by_language(self, language):
-            return self.__movie_languages.get(language)
-
-        # ...
-
-        def search_by_city(self, city_name):
-            return self.__movie_cities.get(city_name)
+  public List<Movie> searchByCity(String cityName) {
+    return movieCities.get(cityName);
+  }
+}
 
 ```
 
