@@ -124,298 +124,230 @@ Here is the high-level definition for the classes described above.
 
 **Enums, data types, and constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
+public enum ReservationStatus {
+  REQUESTED, PENDING, CONFIRMED, CHECKED_IN, CANCELED, ABANDONED
+}
 
+public enum SeatType {
+  REGULAR, KID, ACCESSIBLE, OTHER
+}
 
-class ReservationStatus(Enum):
-    REQUESTED, PENDING, CONFIRMED, CHECKED_IN, CANCELED, ABANDONED = 1, 2, 3, 4, 5, 6
+public enum OrderStatus {
+  RECEIVED, PREPARING, COMPLETED, CANCELED, NONE
+}
 
+public enum TableStatus {
+  FREE, RESERVED, OCCUPIED, OTHER
+}
 
-class SeatType(Enum):
-    REGULAR, KID, ACCESSIBLE, OTHER = 1, 2, 3, 4
+public enum AccountStatus {
+  ACTIVE, CLOSED, CANCELED, BLACKLISTED, BLOCKED
+}
 
+public enum PaymentStatus {
+  UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED
+}
 
-class OrderStatus(Enum):
-    RECEIVED, PREPARING, COMPLETED, CANCELED, NONE = 1, 2, 3, 4, 5
-
-
-class TableStatus(Enum):
-    FREE, RESERVED, OCCUPIED, OTHER = 1, 2, 3, 4
-
-
-class AccountStatus(Enum):
-    ACTIVE, CLOSED, CANCELED, BLACKLISTED, BLOCKED = 1, 2, 3, 4, 5
-
-
-class PaymentStatus(Enum):
-    UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-
-
-class Address:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
 ```
 
 **Account, Person, Employee, Receptionist, Manager, and Chef:** These classes represent the different people that interact with our system:
 
-```python
-from abc import ABC
-from datetime import datetime
-from .constants import *
+```java
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter methods and modified only through their public setter function.
+
+public class Account {
+  private String id;
+  private String password;
+  private Address address;
+  private AccountStatus status;
+
+  public boolean resetPassword();
+}
+
+public abstract class Person {
+  private String name;
+  private String email;
+  private String phone; 
+}
 
 
-# For simplicity, we are not defining getter and setter functions. The reader can
-# assume that all class attributes are private and accessed through their respective
-# public getter methods and modified only through their public methods function.
+public abstract class Employee extends Person {
+  private int employeeID;
+  private Date dateJoined;
+  
+  private Account account;
+}
 
+public class Receptionist extends Employee {
+  public boolean createReservation();
+  public List<Customer> searchCustomer(String name);
+}
 
-class Account:
-    def __init__(self, id, password, address, status=AccountStatus.Active):
-        self.__id = id
-        self.__password = password
-        self.__address = address
-        self.__status = status
+public class Manager extends Employee {
+  public boolean addEmployee();
+}
 
-    def reset_password(self):
-        None
-
-
-class Person(ABC):
-    def __init__(self, name, email, phone):
-        self.__name = name
-        self.__email = email
-        self.__phone = phone
-
-
-class Employee(ABC, Person):
-    def __init__(self, id, account, name, email, phone):
-        super().__init__(name, email, phone)
-        self.__employee_id = id
-        self.__date_joined = datetime.date.today()
-        self.__account = account
-
-
-class Receptionist(Employee):
-    def __init__(self, id, account, name, email, phone):
-        super().__init__(id, account, name, email, phone)
-
-    def create_reservation(self):
-        None
-
-    def search_customer(self, name):
-        None
-
-
-class Manager(Employee):
-    def __init__(self, id, account, name, email, phone):
-        super().__init__(id, account, name, email, phone)
-
-    def add_employee(self):
-        None
-
-
-class Chef(Employee):
-    def __init__(self, id, account, name, email, phone):
-        super().__init__(id, account, name, email, phone)
-
-    def take_order(self):
-        None
+public class Chef extends Employee {
+  public boolean takeOrder();
+}
 
 ```
 
 **Restaurant, Branch, Kitchen, TableChart:** These classes represent the top-level classes of the system
 
-```python
-class Kitchen:
-    def __init__(self, name):
-        self.__name = name
-        self.__chefs = []
+```java
+public class Kitchen {
+  private String name;
+  private Chef[] chefs;
 
-    def assign_chef(self, chef):
-        None
+  private boolean assignChef();
+}
 
+public class Branch {
+  private String name;
+  private Address location;
+  private Kitchen kitchen;
 
-class Branch:
-    def __init__(self, name, location, kitchen):
-        self.__name = name
-        self.__location = location
-        self.__kitchen = kitchen
+  public Address addTableChart();
+}
 
-    def add_table_chart(self):
-        None
+public class Restaurant {
+  private String name;
+  private List<Branch> branches;
 
+  public boolean addBranch(Branch branch);
+}
 
-class Restaurant:
-    def __init__(self, name):
-        self.__name = name
-        self.__branches = []
+public class TableChart {
+  private int tableChartID;
+  private byte[] tableChartImage;
 
-    def add_branch(self, branch):
-        None
-
-
-class TableChart:
-    def __init__(self, id):
-        self.__table_chart_id = id
-        self.__table_chart_image = []
-
-    def print(self):
-        None
+  public bool print();
+}
 
 ```
 
 **Table, TableSeat, and Reservation:** Each table can have multiple seats and customers can make reservations for tables:
 
-```python
-from datetime import datetime
-from .constants import *
+```java
+public class Table {
+  private int tableID;
+  private TableStatus status;
+  private int maxCapacity;
+  private int locationIdentifier;
 
+  private List<TableSeat> seats;
 
-class Table:
-    def __init__(self, id, max_capacity, location_identifier, status=TableStatus.FREE):
-        self.__table_id = id
-        self.__max_capacity = max_capacity
-        self.__location_identifier = location_identifier
-        self.__status = status
-        self.__seats = []
+  public boolean isTableFree();
+  public boolean addReservation();
 
-    def is_table_free(self):
-        None
+  public static List<Table> search(int capacity, Date startTime) {
+    // return all tables with the given capacity and availability
+  }
+}
 
-    def add_reservation(self):
-        None
+public class TableSeat {
+  private int tableSeatNumber;
+  private SeatType type;
 
-    def search(self, capacity, start_time):
-        # return all tables with the given capacity and availability
-        None
+  public boolean updateSeatType(SeatType type);
+}
 
+public class Reservation {
+  private int reservationID;
+  private Date timeOfReservation;
+  private int peopleCount;
+  private ReservationStatus status;
+  private String notes;
+  private Date checkinTime;
+  private Customer customer;
 
-class TableSeat:
-    def __init__(self):
-        self.__table_seat_number = 0
-        self.__type = SeatType.REGULAR
+  private Table[] tables;
+  private List<Notification> notifications;
+  public boolean updatePeopleCount(int count);
+}
 
-    def update_seat_type(self, seat_type):
-        None
-
-
-class Reservation:
-    def __init__(self, id, people_count, notes, customer):
-        self.__reservation_id = id
-        self.__time_of_reservation = datetime.now()
-        self.__people_count = people_count
-        self.__status = ReservationStatus.REQUESTED
-        self.__notes = notes
-        self.__checkin_time = datetime.now()
-        self.__customer = customer
-        self.__tables = []
-        self.__notifications = []
-
-    def update_people_count(self, count):
-        None
 
 ```
 
 **Menu, MenuSection, and MenuItem:** Each restaurant branch will have its own menu, each menu will have multiple menu sections, which will contain menu items:
 
-```python
-class MenuItem:
-    def __init__(self, id, title, description, price):
-        self.__menu_item_id = id
-        self.__title = title
-        self.__description = description
-        self.__price = price
+```java
+public class MenuItem {
+  private int menuItemID;
+  private String title;
+  private String description;
+  private double price;
 
-    def update_price(self, price):
-        None
+  public boolean updatePrice(double price);
+}
 
+public class MenuSection {
+  private int menuSectionID;
+  private String title;
+  private String description;
+  private List<MenuItem> menuItems;
 
-class MenuSection:
-    def __init__(self, id, title, description):
-        self.__menu_section_id = id
-        self.__title = title
-        self.__description = description
-        self.__menu_items = []
+  public boolean addMenuItem(MenuItem menuItem);
+}
 
-    def add_menu_item(self, menu_item):
-        None
+public class Menu {
+  private int menuID;
+  private String title;
+  private String description;
+  private List<MenuSection> menuSections;
 
-
-class Menu:
-    def __init__(self, id, title, description):
-        self.__menu_id = id
-        self.__title = title
-        self.__description = description
-        self.__menu_sections = []
-
-    def add_menu_section(self, menu_section):
-        None
-
-    def print(self):
-        None
+  public boolean addMenuSection(MenuSection menuSection);
+  public boolean print();
+}
 
 ```
 
 **Order, Meal, and MealItem:** Each order will have meals for table seats:
 
-```python
-from datetime import datetime
+```java
+public class MealItem {
+  private int mealItemID;
+  private int quantity;
+  private MenuItem menuItem;
 
+  public boolean updateQuantity(int quantity);
+}
 
-class MealItem:
-    def __init__(self, id, quantity, menu_item):
-        self.__meal_item_id = id
-        self.__quantity = quantity
-        self.__menu_item = menu_item
+public class Meal {
+  private int mealID;
+  private TableSeat seat;
+  private List<MenuItem> menuItems;
 
-    def update_quantity(self, quantity):
-        None
+  public boolean addMealItem(MealItem mealItem);
+}
 
+public class Order {
+  private int OrderID;
+  private OrderStatus status;
+  private Date creationTime;
 
-class Meal:
-    def __init__(self, id, seat):
-        self.__meal_id = id
-        self.__seat = seat
-        self.__menu_items = []
+  private Meal[] meals;
+  private Table table;
+  private Check check;
+  private Waiter waiter;
+  private Chef chef;
 
-    def add_meal_item(self, meal_item):
-        None
-
-
-class Check():
-    def __init__(self):
-        None
-
-
-class Order:
-    def __init__(self, id, status, table, waiter, chef):
-        self.__order_id = id
-        self.__OrderStatus = status
-        self.__creation_time = datetime.now()
-
-        self.__meals = []
-        self.__table = table
-        self.__waiter = waiter
-        self.__chef = chef
-        self.__check = Check()
-
-    def add_meal(self, meal):
-        None
-
-    def remove_meal(self, meal):
-        None
-
-    def get_status(self):
-        return self.__OrderStatus
-
-    def set_status(self, status):
-        None
-
+  public boolean addMeal(Meal meal);
+  public boolean removeMeal(Meal meal);
+  public OrderStatus getStatus();
+  public boolean setStatus(OrderStatus status);
+}
 ```
 
