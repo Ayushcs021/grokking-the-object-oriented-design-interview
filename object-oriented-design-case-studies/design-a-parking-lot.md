@@ -108,409 +108,450 @@ Following is the skeleton code for our parking lot system:
 
 **Enums and Constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
 
+public enum VehicleType {
+  CAR, TRUCK, ELECTRIC, VAN, MOTORBIKE
+}
 
-class VehicleType(Enum):
-    CAR, TRUCK, ELECTRIC, VAN, MOTORBIKE = 1, 2, 3, 4, 5
+public enum ParkingSpotType {
+  HANDICAPPED, COMPACT, LARGE, MOTORBIKE, ELECTRIC
+}
 
+public enum AccountStatus {
+  ACTIVE, BLOCKED, BANNED, COMPROMISED, ARCHIVED, UNKNOWN
+}
 
-class ParkingSpotType(Enum):
-    HANDICAPPED, COMPACT, LARGE, MOTORBIKE, ELECTRIC = 1, 2, 3, 4, 5
+public enum ParkingTicketStatus {
+  ACTIVE, PAID, LOST
+}
 
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
-class AccountStatus(Enum):
-    ACTIVE, BLOCKED, BANNED, COMPROMISED, ARCHIVED, UNKNOWN = 1, 2, 3, 4, 5, 6
-
-
-class ParkingTicketStatus(Enum):
-    ACTIVE, PAID, LOST = 1, 2, 3
-
-
-class Address:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
-
-
-class Person():
-    def __init__(self, name, address, email, phone):
-        self.__name = name
-        self.__address = address
-        self.__email = email
-        self.__phone = phone
-
+public class Person {
+  private String name;
+  private Address address;
+  private String email;
+  private String phone;
+}
 
 ```
 
 **Account, Admin, and ParkingAttendant:** These classes represent various people that interact with our system:
 
-```python
-from .constants import *
+```java
+public abstract class Account {
+  private String userName;
+  private String password;
+  private AccountStatus status;
+  private Person person;
 
+  public boolean resetPassword();
+}
 
-class Account:
-    def __init__(self, user_name, password, person, status=AccountStatus.Active):
-        self.__user_name = user_name
-        self.__password = password
-        self.__person = person
-        self.__status = status
+public class Admin extends Account {
+  public bool addParkingFloor(ParkingFloor floor);
+  public bool addParkingSpot(String floorName, ParkingSpot spot);
+  public bool addParkingDisplayBoard(String floorName, ParkingDisplayBoard displayBoard);
+  public bool addCustomerInfoPanel(String floorName, CustomerInfoPanel infoPanel);
 
-    def reset_password(self):
-        None
+  public bool addEntrancePanel(EntrancePanel entrancePanel);
+  public bool addExitPanel(ExitPanel exitPanel);
+}
 
-
-class Admin(Account):
-    def __init__(self, user_name, password, person, status=AccountStatus.Active):
-        super().__init__(user_name, password, person, status)
-
-    def add_parking_floor(self, floor):
-        None
-
-    def add_parking_spot(self, floor_name, spot):
-        None
-
-    def add_parking_display_board(self, floor_name, display_board):
-        None
-
-    def add_customer_info_panel(self, floor_name, info_panel):
-        None
-
-    def add_entrance_panel(self, entrance_panel):
-        None
-
-    def add_exit_panel(self, exit_panel):
-        None
-
-
-class ParkingAttendant(Account):
-    def __init__(self, user_name, password, person, status=AccountStatus.Active):
-        super().__init__(user_name, password, person, status)
-
-    def process_ticket(self, ticket_number):
-        None
-
-
+public class ParkingAttendant extends Account {
+  public bool processTicket(string TicketNumber);
+}
 ```
 
 **ParkingSpot:** Here is the definition of ParkingSpot and all of its children classes:
 
-```python
-from abc import ABC
-from .constants import  *
+```java
+public abstract class ParkingSpot {
+  private String number;
+  private boolean free;
+  private Vehicle vehicle;
+  private final ParkingSpotType type;
 
+  public boolean IsFree();
 
-class ParkingSpot(ABC):
-    def __init__(self, number, parking_spot_type):
-        self.__number = number
-        self.__free = True
-        self.__vehicle = None
-        self.__parking_spot_type = parking_spot_type
+  public ParkingSpot(ParkingSpotType type) {
+    this.type = type;
+  }
 
-    def is_free(self):
-        return self.__free
+  public boolean assignVehicle(Vehicle vehicle) {
+    this.vehicle = vehicle;
+    free = false;
+  }
 
-    def assign_vehicle(self, vehicle):
-        self.__vehicle = vehicle
-        free = False
+  public boolean removeVehicle() {
+    this.vehicle = null;
+    free = true;
+  }
+}
 
-    def remove_vehicle(self):
-        self.__vehicle = None
-        free = True
+public class HandicappedSpot extends ParkingSpot {
+  public HandicappedSpot() {
+    super(ParkingSpotType.HANDICAPPED);
+  }
+}
 
+public class CompactSpot extends ParkingSpot {
+  public CompactSpot() {
+    super(ParkingSpotType.COMPACT);
+  }
+}
 
-class HandicappedSpot(ParkingSpot):
-    def __init__(self, number):
-        super().__init__(number, ParkingSpotType.HANDICAPPED)
+public class LargeSpot extends ParkingSpot {
+  public LargeSpot() {
+    super(ParkingSpotType.LARGE);
+  }
+}
 
+public class MotorbikeSpot extends ParkingSpot {
+  public MotorbikeSpot() {
+    super(ParkingSpotType.MOTORBIKE);
+  }
+}
 
-class CompactSpot(ParkingSpot):
-    def __init__(self, number):
-        super().__init__(number, ParkingSpotType.COMPACT)
-
-
-class LargeSpot(ParkingSpot):
-    def __init__(self, number):
-        super().__init__(number, ParkingSpotType.LARGE)
-
-
-class MotorbikeSpot(ParkingSpot):
-    def __init__(self, number):
-        super().__init__(number, ParkingSpotType.MOTORBIKE)
-
-
-class ElectricSpot(ParkingSpot):
-    def __init__(self, number):
-        super().__init__(number, ParkingSpotType.ELECTRIC)
-
-
+public class ElectricSpot extends ParkingSpot {
+  public ElectricSpot() {
+    super(ParkingSpotType.ELECTRIC);
+  }
+}
 ```
+**Vehicle:** 
+```java
+public abstract class Vehicle {
+  private String licenseNumber;
+  private final VehicleType type;
+  private ParkingTicket ticket;
+
+  public Vehicle(VehicleType type) {
+    this.type = type;
+  }
+
+  public void assignTicket(ParkingTicket ticket) {
+    this.ticket = ticket;
+  }
+}
+
+public class Car extends Vehicle {
+  public Car() {
+    super(VehicleType.CAR);
+  }
+}
+
+public class Van extends Vehicle {
+  public Van() {
+    super(VehicleType.VAN);
+  }
+}
+
+public class Truck extends Vehicle {
+  public Truck() {
+    super(VehicleType.TRUCK);
+  }
+}
+
+// Similarly we can define classes for Motorcycle and Electric vehicles
+```
+
 
 **ParkingFloor:** This class encapsulates a parking floor:
 
-```python
-from .constants import  *
-from .parking_display_board import *
+```java
+public class ParkingFloor {
+  private String name;
+  private HashMap<String, HandicappedSpot> handicappedSpots;
+  private HashMap<String, CompactSpot> compactSpots;
+  private HashMap<String, LargeSpot> largeSpots;
+  private HashMap<String, MotorbikeSpot> motorbikeSpots;
+  private HashMap<String, ElectricSpot> electricSpots;
+  private HashMap<String, CustomerInfoPortal> infoPortals;
+  private ParkingDisplayBoard displayBoard;
 
+  public ParkingFloor(String name) {
+    this.name = name;
+  }
 
-class ParkingFloor:
-    def __init__(self, name):
-        self.__name = name
-        self.__handicapped_spots = {}
-        self.__compact_spots = {}
-        self.__large_spots = {}
-        self.__motorbike_spots = {}
-        self.__electric_spots = {}
-        self.__info_portals = {}
-        self.__free_handicapped_spot_count = {'free_spot': 0}
-        self.__free_compact_spot_count = {'free_spot': 0}
-        self.__free_large_spot_count = {'free_spot': 0}
-        self.__free_motorbike_spot_count = {'free_spot': 0}
-        self.__free_electric_spot_count = {'free_spot': 0}
-        self.__display_board = ParkingDisplayBoard()
+  public void addParkingSpot(ParkingSpot spot) {
+    switch (spot.getType()) {
+    case ParkingSpotType.HANDICAPPED:
+      handicappedSpots.put(spot.getNumber(), spot);
+      break;
+    case ParkingSpotType.COMPACT:
+      compactSpots.put(spot.getNumber(), spot);
+      break;
+    case ParkingSpotType.LARGE:
+      largeSpots.put(spot.getNumber(), spot);
+      break;
+    case ParkingSpotType.MOTORBIKE:
+      motorbikeSpots.put(spot.getNumber(), spot);
+      break;
+    case ParkingSpotType.ELECTRIC:
+      electricSpots.put(spot.getNumber(), spot);
+      break;
+    default:
+      print("Wrong parking spot type!");
+    }
+  }
 
-    def add_parking_spot(self, spot):
-        switcher = {
-            ParkingSpotType.HANDICAPPED: self.__handicapped_spots.put(spot.get_number(), spot),
-            ParkingSpotType.COMPACT: self.__compact_spots.put(spot.get_number(), spot),
-            ParkingSpotType.LARGE: self.__large_spots.put(spot.get_number(), spot),
-            ParkingSpotType.MOTORBIKE: self.__motorbike_spots.put(spot.get_number(), spot),
-            ParkingSpotType.ELECTRIC: self.__electric_spots.put(spot.get_number(), spot),
+  public void assignVehicleToSpot(Vehicle vehicle, ParkingSpot spot) {
+    spot.assignVehicle(vehicle);
+    switch (spot.getType()) {
+    case ParkingSpotType.HANDICAPPED:
+      updateDisplayBoardForHandicapped(spot);
+      break;
+    case ParkingSpotType.COMPACT:
+      updateDisplayBoardForCompact(spot);
+      break;
+    case ParkingSpotType.LARGE:
+      updateDisplayBoardForLarge(spot);
+      break;
+    case ParkingSpotType.MOTORBIKE:
+      updateDisplayBoardForMotorbike(spot);
+      break;
+    case ParkingSpotType.ELECTRIC:
+      updateDisplayBoardForElectric(spot);
+      break;
+    default:
+      print("Wrong parking spot type!");
+    }
+  }
+
+  private void updateDisplayBoardForHandicapped(ParkingSpot spot) {
+    if (this.displayBoard.getHandicappedFreeSpot().getNumber() == spot.getNumber()) {
+      // find another free handicapped parking and assign to displayBoard
+      for (String key : handicappedSpots.keySet()) {
+        if (handicappedSpots.get(key).isFree()) {
+          this.displayBoard.setHandicappedFreeSpot(handicappedSpots.get(key));
         }
-        switcher.get(spot.get_type(), 'Wrong parking spot type')
+      }
+      this.displayBoard.showEmptySpotNumber();
+    }
+  }
 
-    def assign_vehicleToSpot(self, vehicle, spot):
-        spot.assign_vehicle(vehicle)
-        switcher = {
-            ParkingSpotType.HANDICAPPED: self.update_display_board_for_handicapped(spot),
-            ParkingSpotType.COMPACT: self.update_display_board_for_compact(spot),
-            ParkingSpotType.LARGE: self.update_display_board_for_large(spot),
-            ParkingSpotType.MOTORBIKE: self.update_display_board_for_motorbike(spot),
-            ParkingSpotType.ELECTRIC: self.update_display_board_for_electric(spot),
+  private void updateDisplayBoardForCompact(ParkingSpot spot) {
+    if (this.displayBoard.getCompactFreeSpot().getNumber() == spot.getNumber()) {
+      // find another free compact parking and assign to displayBoard
+      for (String key : compactSpots.keySet()) {
+        if (compactSpots.get(key).isFree()) {
+          this.displayBoard.setCompactFreeSpot(compactSpots.get(key));
         }
-        switcher(spot.get_type(), 'Wrong parking spot type!')
+      }
+      this.displayBoard.showEmptySpotNumber();
+    }
+  }
 
-    def update_display_board_for_handicapped(self, spot):
-        if self.__display_board.get_handicapped_free_spot().get_number() == spot.get_number():
-            # find another free handicapped parking and assign to display_board
-            for key in self.__handicapped_spots:
-                if self.__handicapped_spots.get(key).is_free():
-                    self.__display_board.set_handicapped_free_spot(self.__handicapped_spots.get(key))
-
-            self.__display_board.show_empty_spot_number()
-
-    def update_display_board_for_compact(self, spot):
-        if self.__display_board.get_compact_free_spot().get_number() == spot.get_number():
-            # find another free compact parking and assign to display_board
-            for key in self.__compact_spots.key_set():
-                if self.__compact_spots.get(key).is_free():
-                    self.__display_board.set_compact_free_spot(self.__compact_spots.get(key))
-
-            self.__display_board.show_empty_spot_number()
-
-    def free_spot(self, spot):
-        spot.remove_vehicle()
-        switcher = {
-            ParkingSpotType.HANDICAPPED: self.__free_handicapped_spot_count.update(
-              free_spot = self.__free_handicapped_spot_count["free_spot"] + 1
-            ),
-            ParkingSpotType.COMPACT: self.__free_compact_spot_count.update(
-              free_spot=self.__free_compact_spot_count["free_spot"] + 1
-            ),
-            ParkingSpotType.LARGE: self.__free_large_spot_count.update(
-              free_spot=self.__free_large_spot_count["free_spot"] + 1
-            ),
-            ParkingSpotType.MOTORBIKE: self.__free_motorbike_spot_count.update(
-              free_spot=self.__free_motorbike_spot_count["free_spot"] + 1
-            ),
-            ParkingSpotType.ELECTRIC: self.__free_electric_spot_count.update(
-              free_spot=self.__free_electric_spot_count["free_spot"] + 1
-            ),
-        }
-
-        switcher(spot.get_type(), 'Wrong parking spot type!')
-
-
+  public void freeSpot(ParkingSpot spot) {
+    spot.removeVehicle();
+    switch (spot.getType()) {
+    case ParkingSpotType.HANDICAPPED:
+      freeHandicappedSpotCount++;
+      break;
+    case ParkingSpotType.COMPACT:
+      freeCompactSpotCount++;
+      break;
+    case ParkingSpotType.LARGE:
+      freeLargeSpotCount++;
+      break;
+    case ParkingSpotType.MOTORBIKE:
+      freeMotorbikeSpotCount++;
+      break;
+    case ParkingSpotType.ELECTRIC:
+      freeElectricSpotCount++;
+      break;
+    default:
+      print("Wrong parking spot type!");
+    }
+  }
+}
 ```
 
 **ParkingDisplayBoard:** This class encapsulates a parking display board:
 
-```python
-class ParkingDisplayBoard:
-    def __init__(self, id):
-        self.__id = id
-        self.__handicapped_free_spot = None
-        self.__compact_free_spot = None
-        self.__large_free_spot = None
-        self.__motorbike_free_spot = None
-        self.__electric_free_spot = None
+```java
+public class ParkingDisplayBoard {
+  private String id;
+  private HandicappedSpot handicappedFreeSpot;
+  private CompactSpot compactFreeSpot;
+  private LargeSpot largeFreeSpot;
+  private MotorbikeSpot motorbikeFreeSpot;
+  private ElectricSpot electricFreeSpot;
 
-    def show_empty_spot_number(self):
-        message = ""
-        if self.__handicapped_free_spot.is_free():
-            message += "Free Handicapped: " + self.__handicapped_free_spot.get_number()
-        else:
-            message += "Handicapped is full"
-        message += "\n"
+  public void showEmptySpotNumber() {
+    String message = "";
+    if(handicappedFreeSpot.IsFree()){
+      message += "Free Handicapped: " + handicappedFreeSpot.getNumber();
+    } else {
+      message += "Handicapped is full";
+    }
+    message += System.lineSeparator();
 
-        if self.__compact_free_spot.is_free():
-            message += "Free Compact: " + self.__compact_free_spot.get_number()
-        else:
-            message += "Compact is full"
-        message += "\n"
+    if(compactFreeSpot.IsFree()){
+      message += "Free Compact: " + compactFreeSpot.getNumber();
+    } else {
+      message += "Compact is full";
+    }
+    message += System.lineSeparator();
 
-        if self.__large_free_spot.is_free():
-            message += "Free Large: " + self.__large_free_spot.get_number()
-        else:
-            message += "Large is full"
-        message += "\n"
+    if(largeFreeSpot.IsFree()){
+      message += "Free Large: " + largeFreeSpot.getNumber();
+    } else {
+      message += "Large is full";
+    }
+    message += System.lineSeparator();
 
-        if self.__motorbike_free_spot.is_free():
-            message += "Free Motorbike: " + self.__motorbike_free_spot.get_number()
-        else:
-            message += "Motorbike is full"
-        message += "\n"
+    if(motorbikeFreeSpot.IsFree()){
+      message += "Free Motorbike: " + motorbikeFreeSpot.getNumber();
+    } else {
+      message += "Motorbike is full";
+    }
+    message += System.lineSeparator();
 
-        if self.__electric_free_spot.is_free():
-            message += "Free Electric: " + self.__electric_free_spot.get_number()
-        else:
-            message += "Electric is full"
+    if(electricFreeSpot.IsFree()){
+      message += "Free Electric: " + electricFreeSpot.getNumber();
+    } else {
+      message += "Electric is full";
+    }
 
-        print(message)
-
+    Show(message);
+  }
+}
 
 ```
 
 **ParkingLot:** Our system will have only one object of this class. This can be enforced by using the [Singleton](https://en.wikipedia.org/wiki/Singleton_pattern) pattern. In software engineering, the singleton pattern is a software design pattern that restricts the instantiation of a class to only one object.
 
-```python
-import threading
-from .constants import *
+```java
+public class ParkingLot {
+  private String name;
+  private Location address;
+  private ParkingRate parkingRate;
 
+  private int compactSpotCount;
+  private int largeSpotCount;
+  private int motorbikeSpotCount;
+  private int electricSpotCount;
+  private final int maxCompactCount;
+  private final int maxLargeCount;
+  private final int maxMotorbikeCount;
+  private final int maxElectricCount;
 
-class ParkingLot:
-    # singleton ParkingLot to ensure only one object of ParkingLot in the system,
-    # all entrance panels will use this object to create new parking ticket: get_new_parking_ticket(),
-    # similarly exit panels will also use this object to close parking tickets
-    instance = None
+  private HashMap<String, EntrancePanel> entrancePanels;
+  private HashMap<String, ExitPanel> exitPanels;
+  private HashMap<String, ParkingFloor> parkingFloors;
 
-    class __OnlyOne:
-        def __init__(self, name, address):
-        # 1. initialize variables: read name, address and parking_rate from database
-        # 2. initialize parking floors: read the parking floor map from database,
-        #    this map should tell how many parking spots are there on each floor. This
-        #    should also initialize max spot counts too.
-        # 3. initialize parking spot counts by reading all active tickets from database
-        # 4. initialize entrance and exit panels: read from database
+  // all active parking tickets, identified by their ticketNumber
+  private HashMap<String, ParkingTicket> activeTickets;
 
-            self.__name = name
-            self.__address = address
-            self.__parking_rate = ParkingRate()
+  // singleton ParkingLot to ensure only one object of ParkingLot in the system,
+  // all entrance panels will use this object to create new parking ticket: getNewParkingTicket(),
+  // similarly exit panels will also use this object to close parking tickets
+  private static ParkingLot parkingLot = null;
 
-            self.__compact_spot_count = 0
-            self.__large_spot_count = 0
-            self.__motorbike_spot_count = 0
-            self.__electric_spot_count = 0
-            self.__max_compact_count = 0
-            self.__max_large_count = 0
-            self.__max_motorbike_count = 0
-            self.__max_electric_count = 0
+  // private constructor to restrict for singleton
+  private ParkingLot() {
+    // 1. initialize variables: read name, address and parkingRate from database
+    // 2. initialize parking floors: read the parking floor map from database,
+    //  this map should tell how many parking spots are there on each floor. This
+    //  should also initialize max spot counts too.
+    // 3. initialize parking spot counts by reading all active tickets from database
+    // 4. initialize entrance and exit panels: read from database
+  }
 
-            self.__entrance_panels = {}
-            self.__exit_panels = {}
-            self.__parking_floors = {}
+  // static method to get the singleton instance of ParkingLot
+  public static ParkingLot getInstance() {
+    if (parkingLot == null) {
+      parkingLot = new ParkingLot();
+    }
+    return parkingLot;
+  }
 
-            # all active parking tickets, identified by their ticket_number
-            self.__active_tickets = {}
+  // note that the following method is 'synchronized' to allow multiple entrances
+  // panels to issue a new parking ticket without interfering with each other
+  public synchronized ParkingTicket getNewParkingTicket(Vehicle vehicle) throws ParkingFullException {
+    if (this.isFull(vehicle.getType())) {
+      throw new ParkingFullException();
+    }
+    ParkingTicket ticket = new ParkingTicket();
+    vehicle.assignTicket(ticket);
+    ticket.saveInDB();
+    // if the ticket is successfully saved in the database, we can increment the parking spot count
+    this.incrementSpotCount(vehicle.getType());
+    this.activeTickets.put(ticket.getTicketNumber(), ticket);
+    return ticket;
+  }
 
-            self.__lock = threading.Lock()
+  public boolean isFull(VehicleType type) {
+    // trucks and vans can only be parked in LargeSpot
+    if (type == VehicleType.Truck || type == VehicleType.Van) {
+      return largeSpotCount >= maxLargeCount;
+    }
 
-    def __init__(self, name, address):
-        if not ParkingLot.instance:
-            ParkingLot.instance = ParkingLot.__OnlyOne(name, address)
-        else:
-            ParkingLot.instance.__name = name
-            ParkingLot.instance.__address = address
+    // motorbikes can only be parked at motorbike spots
+    if (type == VehicleType.Motorbike) {
+      return motorbikeSpotCount >= maxMotorbikeCount;
+    }
 
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
+    // cars can be parked at compact or large spots
+    if (type == VehicleType.Car) {
+      return (compactSpotCount + largeSpotCount) >= (maxCompactCount + maxLargeCount);
+    }
 
-    def get_new_parking_ticket(self, vehicle):
-        if self.is_full(vehicle.get_type()):
-            raise Exception('Parking full!')
-    # synchronizing to allow multiple entrances panels to issue a new
-    # parking ticket without interfering with each other
-        self.__lock.acquire()
-        ticket = ParkingTicket()
-        vehicle.assign_ticket(ticket)
-        ticket.save_in_DB()
-        # if the ticket is successfully saved in the database, we can increment the parking spot count
-        self.__increment_spot_count(vehicle.get_type())
-        self.__active_tickets.put(ticket.get_ticket_number(), ticket)
-        self.__lock.release()
-        return ticket
+    // electric car can be parked at compact, large or electric spots
+    return (compactSpotCount + largeSpotCount + electricSpotCount) >= (maxCompactCount + maxLargeCount
+        + maxElectricCount);
+  }
 
-    def is_full(self, type):
-        # trucks and vans can only be parked in LargeSpot
-        if type == VehicleType.Truck or type == VehicleType.Van:
-            return self.__large_spot_count >= self.__max_large_count
+  // increment the parking spot count based on the vehicle type
+  private boolean incrementSpotCount(VehicleType type) {
+    if (type == VehicleType.Truck || type == VehicleType.Van) {
+      largeSpotCount++;
+    } else if (type == VehicleType.Motorbike) {
+      motorbikeSpotCount++;
+    } else if (type == VehicleType.Car) {
+      if (compactSpotCount < maxCompactCount) {
+        compactSpotCount++;
+      } else {
+        largeSpotCount++;
+      }
+    } else { // electric car
+      if (electricSpotCount < maxElectricCount) {
+        electricSpotCount++;
+      } else if (compactSpotCount < maxCompactCount) {
+        compactSpotCount++;
+      } else {
+        largeSpotCount++;
+      }
+    }
+  }
 
-        # motorbikes can only be parked at motorbike spots
-        if type == VehicleType.Motorbike:
-            return self.__motorbike_spot_count >= self.__max_motorbike_count
+  public boolean isFull() {
+    for (String key : parkingFloors.keySet()) {
+      if (!parkingFloors.get(key).isFull()) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-        # cars can be parked at compact or large spots
-        if type == VehicleType.Car:
-            return (self.__compact_spot_count + self.__large_spot_count) >= (self.__max_compact_count + self.__max_large_count)
+  public void addParkingFloor(ParkingFloor floor) {
+    /* store in database */ }
 
-        # electric car can be parked at compact, large or electric spots
-        return (self.__compact_spot_count + self.__large_spot_count + self.__electric_spot_count) >= (self.__max_compact_count + self.__max_large_count
-                                                                                                  + self.__max_electric_count)
+  public void addEntrancePanel(EntrancePanel entrancePanel) {
+    /* store in database */ }
 
-    # increment the parking spot count based on the vehicle type
-    def increment_spot_count(self, type):
-        large_spot_count = 0
-        motorbike_spot_count = 0
-        compact_spot_count = 0
-        electric_spot_count = 0
-        if type == VehicleType.Truck or type == VehicleType.Van:
-            large_spot_count += 1
-        elif type == VehicleType.Motorbike:
-            motorbike_spot_count += 1
-        elif type == VehicleType.Car:
-            if self.__compact_spot_count < self.__max_compact_count:
-                compact_spot_count += 1
-            else:
-                large_spot_count += 1
-        else:  # electric car
-            if self.__electric_spot_count < self.__max_electric_count:
-                electric_spot_count += 1
-            elif self.__compact_spot_count < self.__max_compact_count:
-                compact_spot_count += 1
-            else:
-                large_spot_count += 1
-
-        def is_full(self):
-            for key in self.__parking_floors:
-                if not self.__parking_floors.get(key).is_full():
-                    return False
-            return True
-
-        def add_parking_floor(self, floor):
-            # store in database
-            None
-
-        def add_entrance_panel(self, entrance_panel):
-            # store in database
-            None
-
-        def add_exit_panel(self,  exit_panel):
-            # store in database
-            None
+  public void addExitPanel(ExitPanel exitPanel) {
+    /* store in database */ }
+}
 
 
 ```
