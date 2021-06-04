@@ -133,263 +133,202 @@ Here is the high-level definition for the classes described above.
 
 **Enums, data types, and constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
 
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
-class Address:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
+public enum OrderStatus {
+  UNSHIPPED, PENDING, SHIPPED, COMPLETED, CANCELED, REFUND_APPLIED
+}
 
+public enum AccountStatus {
+  ACTIVE, BLOCKED, BANNED, COMPROMISED, ARCHIVED, UNKNOWN
+}
 
-class OrderStatus(Enum):
-    UNSHIPPED, PENDING, SHIPPED, COMPLETED, CANCELED, REFUND_APPLIED = 1, 2, 3, 4, 5, 6
+public enum ShipmentStatus {
+  PENDING, SHIPPED, DELIVERED, ON_HOLD,
+}
 
+public enum PaymentStatus {
+  UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED
+}
 
-class AccountStatus(Enum):
-    ACTIVE, BLOCKED, BANNED, COMPROMISED, ARCHIVED, UNKNOWN = 1, 2, 3, 4, 5, 6
-
-
-class ShipmentStatus(Enum):
-    PENDING, SHIPPED, DELIVERED, ON_HOLD = 1, 2, 3, 4
-
-
-class PaymentStatus(Enum):
-    UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-
+```
+**Account, Customer, Admin, and Guest:** These classes represent different people that interact with our system:
 
 ```
 
-**Account, Customer, Admin, and Guest:** These classes represent different people that interact with our system:
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter methods and modified only through their public methods function.
 
-```python
-from abc import ABC
-from .constants import *
+public class Account {
+  private String userName;
+  private String password;
+  private AccountStatus status;
+  private String name;
+  private Address shippingAddress;
+  private String email;
+  private String phone;
 
+  private List<CreditCard> creditCards;
+  private List<ElectronicBankTransfer> bankAccounts;
 
-# For simplicity, we are not defining getter and setter functions. The reader can
-# assume that all class attributes are private and accessed through their respective
-# public getter methods and modified only through their public methods function.
+  public boolean addProduct(Product product);
+  public boolean addProductReview(ProductReview review);
+  public boolean resetPassword();
+}
 
+public abstract class Customer {
+  private ShoppingCart cart;
+  private Order order;
 
-class Account:
-    def __init__(self, user_name, password, name, email, phone, shipping_address, status=AccountStatus):
-        self.__user_name = user_name
-        self.__password = password
-        self.__name = name
-        self.__email = email
-        self.__phone = phone
-        self.__shipping_address = shipping_address
-        self.__status = status.ACTIVE
-        self.__credit_cards = []
-        self.__bank_accounts = []
+  public ShoppingCart getShoppingCart();
+  public bool addItemToCart(Item item);
+  public bool removeItemFromCart(Item item);
+}
 
-    def add_product(self, product):
-        None
+public class Guest extends Customer {
+  public bool registerAccount();
+}
 
-    def add_productReview(self, review):
-        None
-
-    def reset_password(self):
-        None
-
-
-class Customer(ABC):
-    def __init__(self, cart, order):
-        self.__cart = cart
-        self.__order = order
-    
-    def get_shopping_cart(self):
-        return self.__cart
-    
-    def add_item_to_cart(self, item):
-        None
-    
-    def remove_item_from_cart(self, item):
-        None
-
-
-class Guest(Customer):
-    def register_account(self):
-        None
-
-
-class Member(Customer):
-    def __init__(self, account):
-        self.__account = account
-    
-    def place_order(self, order):
-        None
-
+public class Member extends Customer {
+  private Account account;
+  public OrderStatus placeOrder(Order order);
+}
 
 ```
 
 **ProductCategory, Product, and ProductReview:** Here are the classes related to a product:
 
-```python
-class ProductCategory:
-    def __init__(self, name, description):
-        self.__name = name
-        self.__description = description
+```java
+public class ProductCategory {
+  private String name;
+  private String description;
+}
 
+public class ProductReview {
+  private int rating;
+  private String review;
 
-class ProductReview:
-    def __init__(self, rating, review, reviewer):
-        self.__rating = rating
-        self.__review = review
-        self.__reviewer = reviewer
+  private Member reviewer;
+}
 
+public class Product {
+  private String productID;
+  private String name;
+  private String description;
+  private double price;
+  private ProductCategory category;
+  private int availableItemCount;
 
-class Product:
-    def __init__(self, id, name, description, price, category, seller_account):
-        self.__product_id = id
-        self.__name = name
-        self.__description = description
-        self.__price = price
-        self.__category = category
-        self.__available_item_count = 0
-        
-        self.__seller = seller_account
-    
-    def get_available_count(self):
-        return self.__available_item_count
-    
-    def update_price(self, new_price):
-        None
+  private Account seller;
+
+  public int getAvailableCount();
+  public boolean updatePrice(double newPrice);
+}
+
 
 
 ```
 
 **ShoppingCart, Item, Order, and OrderLog:** Users will add items to the shopping cart and place an order to buy all the items in the cart.
 
-```python
-from datetime import datetime
-from .constants import *
+```java
 
+public class Item {
+  private String productID;
+  private int quantity;
+  private double price;
 
-class Item:
-    def __init__(self, id, quantity, price):
-        self.__product_id = id
-        self.__quantity = quantity
-        self.__price = price
-    
-    def update_quantity(self, quantity):
-        None
+  public boolean updateQuantity(int quantity);
+}
 
+public class ShoppingCart {
+  private List<Items> items;
 
-class ShoppingCart:
-    def __init__(self):
-        self.__items = []
-    
-    def add_item(self, item):
-        None
-    
-    def remove_item(self, item):
-        None
-    
-    def update_item_quantity(self, item, quantity):
-        None
-    
-    def get_items(self):
-        return self.__items
-    
-    def checkout(self):
-        None
+  public boolean addItem(Item item);
+  public boolean removeItem(Item item);
+  public boolean updateItemQuantity(Item item, int quantity);
+  public List<Item> getItems();
+  public boolean checkout();
+}
 
+public class OrderLog {
+  private String orderNumber;
+  private Date creationDate;
+  private OrderStatus status;
+}
 
-class OrderLog:
-    def __init__(self, order_number, status=OrderStatus.PENDING):
-        self.__order_number = order_number
-        self.__creation_date = datetime.date.today()
-        self.__status = status
+public class Order {
+  private String orderNumber;
+  private OrderStatus status;
+  private Date orderDate;
+  private List<OrderLog> orderLog;
 
-
-class Order:
-    def __init__(self, order_number, status=OrderStatus.PENDING):
-        self.__order_number = 0
-        self.__status = status
-        self.__order_date = datetime.date.today()
-        self.__order_log = []
-
-    def send_for_shipment(self):
-        None
-    
-    def make_payment(self, payment):
-        None
-    
-    def add_order_log(self, order_log):
-        None
-
-
+  public boolean sendForShipment();
+  public boolean makePayment(Payment payment);
+  public boolean addOrderLog(OrderLog orderLog);
+}
 ```
 
 **Shipment, ShipmentLog, and Notification:** After successfully placing an order, a shipment record will be created:
 
-```python
-from abc import ABC
-from datetime import datetime
-from .constants import *
+```java
 
+public class ShipmentLog {
+  private String shipmentNumber;
+  private ShipmentStatus status;
+  private Date creationDate;
+}
 
-class ShipmentLog:
-    def __init__(self, shipment_number, status=ShipmentStatus.PENDING):
-        self.__shipment_number = shipment_number
-        self.__status = status
-        self.__creation_date = datetime.date.today()
+public class Shipment {
+  private String shipmentNumber;
+  private Date shipmentDate;
+  private Date estimatedArrival;
+  private String shipmentMethod;
+  private List<ShipmentLog> shipmentLogs;
 
+  public boolean addShipmentLog(ShipmentLog shipmentLog);
+}
 
-class Shipment:
-    def __init__(self, shipment_number, shipment_method):
-        self.__shipment_number = shipment_number
-        self.__shipment_date = datetime.date.today()
-        self.__estimated_arrival = datetime.date.today()
-        self.__shipment_method = shipment_method
-        self.__shipmentLogs = []
+public abstract class Notification {
+  private int notificationId;
+  private Date createdOn;
+  private String content;
 
-    def add_shipment_log(self, shipment_log):
-        None
-
-
-class Notification(ABC):
-    def __init__(self, id, content):
-        self.__notification_id = id
-        self.__created_on = datetime.date.today()
-        self.__content = content
-    
-    def send_notification(self, account):
-        None
+  public boolean sendNotification(Account account);
+}
 
 
 ```
 
 **Search interface and Catalog:** Catalog will implement Search to facilitate searching of products.
 
-```python
-from abc import ABC
+```java
+public interface Search {
+  public List<Product> searchProductsByName(String name);
+  public List<Product> searchProductsByCategory(String category);
+}
 
+public class Catalog implements Search {
+   HashMap<String, List<Product>> productNames;
+   HashMap<String, List<Product>> productCategories;
 
-class Search(ABC):
-    def search_products_by_name(self, name):
-        None
-    
-    def search_products_by_category(self, category):
-        None
+  public List<Product> searchProductsByName(String name) {
+    return productNames.get(name);
+  }
 
-
-class Catalog(Search):
-    def __init__(self):
-        self.__product_names = {}
-        self.__product_categories = {}
-    
-    def search_products_by_name(self, name):
-        return self.product_names.get(name)
-    
-    def search_products_by_category(self, category):
-        return self.product_categories.get(category)
+  public List<Product> searchProductsByCategory(String category) {
+    return productCategories.get(category);
+  }
+}
 
 
 ```
