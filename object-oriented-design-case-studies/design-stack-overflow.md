@@ -116,215 +116,184 @@ Here is the high-level definition for the classes described above.
 
 **Enums, data types, and constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
+public enum QuestionStatus{
+  OPEN,
+  CLOSED,
+  ON_HOLD,
+  DELETED
+}
 
+public enum QuestionClosingRemark{
+  DUPLICATE,
+  OFF_TOPIC,
+  TOO_BROAD,
+  NOT_CONSTRUCTIVE,
+  NOT_A_REAL_QUESTION,
+  PRIMARILY_OPINION_BASED
+}
 
-class QuestionStatus(Enum):
-    OPEN, CLOSED, ON_HOLD, DELETED = 1, 2, 3, 4
-
-
-class QuestionClosingRemark(Enum):
-    DUPLICATE, OFF_TOPIC, TOO_BROAD, NOT_CONSTRUCTIVE, NOT_A_REAL_QUESTION, PRIMARILY_OPINION_BASED = 1, 2, 3, 4, 5, 6
-
-
-class AccountStatus(Enum):
-    ACTIVE, CLOSED, CANCELED, BLACKLISTED, BLOCKED = 1, 2, 3, 4, 5
+public enum AccountStatus{
+  ACTIVE,
+  CLOSED,
+  CANCELED,
+  BLACKLISTED,
+  BLOCKED
+}
 
 
 ```
 
 **Account, Member, Admin, and Moderator:** These classes represent the different people that interact with our system:
 
-```python
-from .constants import *
+```java
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter methods and modified only through their public methods function.
 
+public class Account {
+  private String id;
+  private String password;
+  private AccountStatus status;
+  private String name;
+  private Address address;
+  private String email;
+  private String phone;
+  private int reputation;
 
-# For simplicity, we are not defining getter and setter functions. The reader can
-# assume that all class attributes are private and accessed through their respective
-# public getter methods and modified only through their public methods function.
+  public boolean resetPassword();
+}
 
+public class Member {
+  private Account account;
+  private List<Badge> badges;
 
-class Account:
-    def __init__(self, id, password, name, address, email, phone, status=AccountStatus.Active):
-        self.__id = id
-        self.__password = password
-        self.__name = name
-        self.__address = address
-        self.__email = email
-        self.__phone = phone
-        self.__status = status
-        self.__reputation = 0
+  public int getReputation();
+  public String getEmail();
+  public boolean createQuestion(Question question);
+  public boolean createTag(Tag tag);
+}
 
-    def reset_password(self):
-        None
+public class Admin extends Member {
+  public boolean blockMember(Member member);
+  public boolean unblockMember(Member member);
+}
 
-
-class Member:
-    def __init__(self, account):
-        self.__account = account
-        self.__badges = []
-
-    def get_reputation(self):
-        return self.__account.get_reputation()
-
-    def get_email(self):
-        return self.__account.get_email()
-
-    def create_question(self, question):
-        None
-
-    def create_tag(self, tag):
-        None
-
-
-class Admin(Member):
-    def block_member(self, member):
-        None
-
-    def unblock_member(self, member):
-        None
-
-
-class Moderator(Member):
-    def close_question(self, question):
-        None
-
-    def undelete_question(self, question):
-        None
-
+public class Moderator extends Member {
+  public boolean closeQuestion(Question question);
+  public boolean undeleteQuestion(Question question);
+}
 
 ```
 
 **Badge, Tag, and Notification:** Members have badges, questions have tags and notifications:
 
-```python
-from datetime import datetime
+```java
 
+public class Badge {
+  private String name;
+  private String description;
+}
 
-class Badge:
-    def __init__(self, name, description):
-        self.__name = name
-        self.__description = description
+public class Tag {
+  private String name;
+  private String description;
+  private long dailyAskedFrequency;
+  private long weeklyAskedFrequency;
+}
 
+public class Notification {
+  private int notificationId;
+  private Date createdOn;
+  private String content;
 
-class Tag:
-    def __init__(self, name, description):
-        self.__name = name
-        self.__description = description
-        self.__daily_asked_frequency = 0
-        self.__weekly_asked_frequency = 0
-
-
-class Notification:
-    def __init__(self, id, content):
-        self.__notification_id = id
-        self.__created_on = datetime.datetime.now()
-        self.__content = content
-    
-    def send_notification(self):
-        None
+  public boolean sendNotification();
+}
 
 
 ```
 
 **Photo and Bounty:** Members can put bounties on questions. Answers and Questions can have multiple photos:
 
-```python
-from datetime import datetime
+```java
+public class Photo {
+  private int photoId;
+  private String photoPath;
+  private Date creationDate;
 
-class Photo:
-    def __init__(self, id, path, member):
-        self.__photo_id = id
-        self.__photo_path = path
-        self.__creation_date = datetime.now()
-        self.__creating_member = member
-    
-    def delete(self):
-        None
+  private Member creatingMember;
 
+  public boolean delete();
+}
 
-class Bounty:
-    def __init__(self, reputation, expiry):
-        self.__reputation = reputation
-        self.__expiry = expiry
-    
-    def modify_reputation(self, reputation):
-        None
+public class Bounty {
+  private int reputation;
+  private Date expiry;
+
+  public boolean modifyReputation(int reputation);
+}
 
 
 ```
 
 **Question, Comment and Answer:** Members can ask questions, as well as add an answer to any question. All members can add comments to all open questions or answers:
 
-```python
-from datetime import datetime
-from abc import ABC
-from .constants import *
+```java
 
-class Search(ABC):
-    def search(self, query):
-        None
+public interface Search {
+  public static List<Question> search(String query);
+}
 
+public class Question implements Search {
+  private String title;
+  private String description;
+  private int viewCount;
+  private int voteCount;
+  private Date creationTime;
+  private Date updateTime;
+  private QuestionStatus status;
+  private QuestionClosingRemark closingRemark;
 
-class Question(Search):
-    def __init__(self, title, description, bounty, asking_member):
-        self.__title = title
-        self.__description = description
-        self.__view_count = 0
-        self.__vote_count = 0
-        self.__creation_time = datetime.now()
-        self.__update_time = datetime.now()
-        self.__status = QuestionStatus.OPEN
-        self.__closing_remark = QuestionClosingRemark.DUPLICATE
+  private Member askingMember;
+  private Bounty bounty;
+  private List<Photo> photos;
+  private List<Comment> comments;
+  private List<Answer> answers;
 
-        self.__bounty = bounty
-        self.__asking_member = asking_member
-        self.__photos = []
-        self.__comments = []
-        self.__answers = []
+  public boolean close();
+  public boolean undelete();
+  public boolean addComment(Comment comment);
+  public boolean addBounty(Bounty bounty);
 
-    def close(self):
-        None
+  public static List<Question> search(String query) {
+    // return all questions containing the string query in their title or description.
+  }
+}
 
-    def undelete(self):
-        None
+public class Comment {
+  private String text;
+  private Date creationTime;
+  private int flagCount;
+  private int voteCount;
 
-    def add_comment(self, comment):
-        None
+  private Member askingMember;
 
-    def add_bounty(self, bounty):
-        None
+  public boolean incrementVoteCount();
+}
 
-    def search(self, query):
-        # return all questions containing the string query in their title or description.
-        None
+public class Answer {
+  private String answerText;
+  private boolean accepted;
+  private int voteCount;
+  private int flagCount;
+  private Date creationTime;
 
+  private Member creatingMember;
+  private List<Photo> photos;
 
-class Comment:
-    def __init__(self, text, member):
-        self.__text = text
-        self.__creation_time = datetime.now()
-        self.__flag_count = 0
-        self.__vote_count = 0
-        self.__asking_member = member
+  public boolean incrementVoteCount();
+}
 
-    def increment_vote_count(self):
-        None
-
-
-class Answer:
-    def __init__(self, text, member):
-        self.__answer_text = text
-        self.__accepted = False
-        self.__vote_count = 0
-        self.__flag_count = 0
-        self.__creation_time = datetime.now()
-        self.__creating_member = member
-        self.__photos = []
-
-    def increment_vote_count(self):
-        None
 
 
 ```
