@@ -112,209 +112,209 @@ Here is the code for major classes.
 
 **Enums and Constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
 
+public enum FlightStatus{
+  ACTIVE,
+  SCHEDULED,
+  DELAYED,
+  DEPARTED,
+  LANDED,
+  IN_AIR,
+  ARRIVED,
+  CANCELLED,
+  DIVERTED,
+  UNKNOWN
+}
 
-class FlightStatus(Enum):
-    ACTIVE, SCHEDULED, DELAYED, DEPARTED, LANDED, IN_AIR, ARRIVED, CANCELLED, DIVERTED, UNKNOWN = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+public enum PaymentStatus{
+  UNPAID,
+  PENDING,
+  COMPLETED,
+  FILLED,
+  DECLINED,
+  CANCELLED,
+  ABANDONED,
+  SETTLING,
+  SETTLED,
+  REFUNDED
+}
 
+public enum ReservationStatus{
+  REQUESTED,
+  PENDING,
+  CONFIRMED,
+  CHECKED_IN,
+  CANCELLED,
+  ABANDONED
+}
 
-class PaymentStatus(Enum):
-    UNPAID, PENDING, COMPLETED, FILLED, DECLINED, CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+public enum SeatClass {
+  ECONOMY,
+  ECONOMY_PLUS,
+  PREFERRED_ECONOMY,
+  BUSINESS,
+  FIRST_CLASS
+}
 
+public enum SeatType {
+  REGULAR,
+  ACCESSIBLE,
+  EMERGENCY_EXIT,
+  EXTRA_LEG_ROOM
+}
 
-class ReservationStatus(Enum):
-    REQUESTED, PENDING, CONFIRMED, CHECKED_IN, CANCELLED, ABANDONED = 1, 2, 3, 4, 5, 6
+public enum AccountStatus{
+  ACTIVE,
+  CLOSED,
+  CANCELED,
+  BLACKLISTED,
+  BLOCKED
+}
 
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
-class SeatClass(Enum):
-    ECONOMY, ECONOMY_PLUS, PREFERRED_ECONOMY, BUSINESS, FIRST_CLASS = 1, 2, 3, 4, 5
-
-
-class SeatType(Enum):
-    REGULAR, ACCESSIBLE, EMERGENCY_EXIT, EXTRA_LEG_ROOM = 1, 2, 3, 4, 5
-
-
-class AccountStatus(Enum):
-    ACTIVE, CLOSED, CANCELED, BLACKLISTED, BLOCKED = 1, 2, 3, 4, 5, 6
-
-
-class Address:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
 
 
 ```
 
 **Account, Person, Customer and Passenger:** These classes represent the different people that interact with our system:
 
-```python
-from abc import ABC
-from .constants import *
+```java
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter method and modified only through their public setter method.
 
+public class Account {
+  private String id;
+  private String password;
+  private AccountStatus status;
 
-# For simplicity, we are not defining getter and setter functions. The reader can
-# assume that all class attributes are private and accessed through their respective
-# public getter methods and modified only through their public methods function.
+  public boolean resetPassword();
+}
 
-class Account:
-    def __init__(self, id, password, status=AccountStatus.Active):
-        self.__id = id
-        self.__password = password
-        self.__status = status
+public abstract class Person {
+  private String name;
+  private Address address;
+  private String email;
+  private String phone;
 
-    def reset_password(self):
-        None
+  private Account account;
+}
 
+public class Customer extends Person {
+  private String frequentFlyerNumber;
 
-class Person(ABC):
-    def __init__(self, name, address, email, phone, account):
-        self.__name = name
-        self.__address = address
-        self.__email = email
-        self.__phone = phone
-        self.__account = account
+  public List<Itinerary> getItineraries();
+}
 
+public class Passenger {
+  private String name;
+  private String passportNumber;
+  private Date dateOfBirth;
 
-class Customer(Person):
-    def __init__(self, frequent_flyer_number):
-        self.__frequent_flyer_number
-
-    def get_itineraries(self):
-        None
-
-
-class Passenger:
-    def __init__(self, name, passport_number, date_of_birth):
-        self.__name = name
-        self.__passport_number = passport_number
-        self.__date_of_birth = date_of_birth
-
-    def get_passport_number(self):
-        return self.__passport_number
-
-
+  public String getPassportNumber() {
+    return this.passportNumber;
+  }
+}
 ```
 
 **Airport, Aircraft, Seat and FlightSeat:** These classes represent the top-level classes of the system:
 
-```python
-class Airport:
-    def __init__(self, name, address, code):
-        self.__name = name
-        self.__address = address
-        self.__code = code
+```java
 
-    def get_flights(self):
-        None
+public class Airport {
+  private String name;
+  private Address address;
+  private String code;
 
+  public List<Flight> getFlights();
+}
 
-class Aircraft:
-    def __init__(self, name, model, manufacturing_year):
-        self.__name = name
-        self.__model = model
-        self.__manufacturing_year = manufacturing_year
-        self.__seats = []
+public class Aircraft {
+  private String name;
+  private String model;
+  private int manufacturingYear;
+  private List<Seat> seats;
 
-    def get_flights(self):
-        None
+  public List<FlightInstance> getFlights();
+}
 
+public class Seat {
+  private String seatNumber;
+  private SeatType type;
+  private SeatClass _class;
+}
 
-class Seat:
-    def __init__(self, seat_number, type, seat_class):
-        self.__seat_number = seat_number
-        self.__type = type
-        self.__seat_class = seat_class
-
-
-class FlightSeat(Seat):
-    def __init__(self, fare):
-        self.__fare = fare
-
-    def get_fare(self):
-        return self.__fare
-
+public class FlightSeat extends Seat {
+  private double fare;
+  public double getFare();
+}
 
 ```
 
 **Flight Schedule classes, Flight, FlightInstance, FlightReservation, Itinerary:** Here are the classes related to flights and reservations:
 
-```python
-class WeeklySchedule:
-    def __init__(self, day_of_week, departure_time):
-        self.__day_of_week = day_of_week
-        self.__departure_time = departure_time
+```java
+public class WeeklySchedule {
+  private int dayOfWeek;
+  private Time departureTime;
+}
 
+public class CustomSchedule {
+  private Date customDate;
+  private Time departureTime;
+}
 
-class CustomSchedule:
-    def __init__(self, custom_date, departure_time):
-        self.__custom_date = custom_date
-        self.__departure_time = departure_time
+public class Flight {
+  private String flightNumber;
+  private Airport departure;
+  private Airport arrival;
+  private int durationInMinutes;
 
+  private List<WeeklySchedules> weeklySchedules;
+  private List<CustomSchedules> customSchedules;
+  private List<FlightInstance> flightInstances;
+}
 
-class Flight:
-    def __init__(self, flight_number, departure, arrival, duration_in_minutes):
-        self.__flight_number = flight_number
-        self.__departure = departure
-        self.__arrival = arrival
-        self.__duration_in_minutes = duration_in_minutes
+public class FlightInstance {
+  private Date departureTime;
+  private String gate;
+  private FlightStatus status;
+  private Aircraft aircraft;
 
-        self.__weekly_schedules = []
-        self.__custom_schedules = []
-        self.__flight_instances = []
+  public bool cancel();
+  public void updateStatus(FlightStatus status);
+}
 
+public class FlightReservation {
+  private String reservationNumber;
+  private FlightInstance flight;
+  private Map<Passenger, FlightSeat> seatMap;
+  private Date creationDate;
+  private ReservationStatus status;
 
-class FlightInstance:
-    def __init__(self, departure_time, gate, status, aircraft):
-        self.__departure_time = departure_time
-        self.__gate = gate
-        self.__status = status
-        self.__aircraft = aircraft
+  public static FlightReservation fetchReservationDetails(String reservationNumber);
+  public List<Passenger> getPassengers();
+}
 
-    def cancel(self):
-        None
+public class Itinerary {
+  private String customerId;
+  private Airport startingAirport;
+  private Airport finalAirport;
+  private Date creationDate;
+  private List<FlightReservation> reservations;
 
-    def update_status(self, status):
-        None
-
-
-class FlightReservation:
-    def __init__(self, reservation_number, flight, aircraft, creation_date, status):
-        self.__reservation_number = reservation_number
-        self.__flight = flight
-        self.__seat_map = {}
-        self.__creation_date = creation_date
-        self.__status = status
-
-    def fetch_reservation_details(self, reservation_number):
-        None
-
-    def get_passengers(self):
-        None
-
-
-class Itinerary:
-    def __init__(self, customer_id, starting_airport, final_airport, creation_date):
-        self.__customer_id = customer_id
-        self.__starting_airport = starting_airport
-        self.__final_airport = final_airport
-        self.__creation_date = creation_date
-        self.__reservations = []
-
-    def get_reservations(self):
-        None
-
-    def make_reservation(self):
-        None
-
-    def make_payment(self):
-        None
-
+  public List<FlightReservation> getReservations();
+  public boolean makeReservation();
+  public boolean makePayment();
+}
 
 ```
 
