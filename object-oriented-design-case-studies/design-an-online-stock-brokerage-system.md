@@ -113,179 +113,197 @@ Here is the code for the top use cases.
 
 **Enums and Constants:** Here are the required enums and constants:
 
-```python
-from enum import Enum
+```java
 
+public enum ReturnStatus {
+  SUCCESS, FAIL, INSUFFICIENT_FUNDS, INSUFFICIENT_QUANTITY, NO_STOCK_POSITION
+}
 
-class ReturnStatus(Enum):
-    SUCCESS, FAIL, INSUFFICIENT_FUNDS, INSUFFICIENT_QUANTITY, NO_STOCK_POSITION = 1, 2, 3, 4, 5, 6
+public enum OrderStatus {
+  OPEN, FILLED, PARTIALLY_FILLED, CANCELLED
+}
 
+public enum TimeEnforcementType {
+  GOOD_TILL_CANCELLED, FILL_OR_KILL, IMMEDIATE_OR_CANCEL, ON_THE_OPEN, ON_THE_CLOSE
+}
 
-class OrderStatus(Enum):
-    OPEN, FILLED, PARTIALLY_FILLED, CANCELLED = 1, 2, 3, 4
+public enum AccountStatus {
+  ACTIVE, CLOSED, CANCELED, BLACKLISTED, None
+}
 
+public class Location {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
-class TimeEnforcementType(Enum):
-    GOOD_TILL_CANCELLED, FILL_OR_KILL, IMMEDIATE_OR_CANCEL, ON_THE_OPEN, ON_THE_CLOSE = 1, 2, 3, 4, 5
-
-
-class AccountStatus(Enum):
-    ACTIVE, CLOSED, CANCELED, BLACKLISTED, NONE = 1, 2, 3, 5
-
-
-class Location:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
-
-
-class Constants:
-    def __init__(self):
-        self.__MONEY_TRANSFER_LIMIT = 100000
+public static class Constants {
+  public static final int MONEY_TRANSFER_LIMIT = 100_000;
+}
 
 ```
 
 **StockExchange:** To encapsulate all the interactions with the stock exchange:
 
-```python
-from .order import Order
+```java
 
+public class StockExchange {
 
-class StockExchange:
-    # singleton, used for restricting to create only one instance
-    instance = None
+  private static StockExchange stockExchangeInstance = null;
 
-    class __OnlyOne:
-        def __init__(self):
-            None
+  // private constructor to restrict for singleton
+  private StockExchange() { }
 
-    def __init__(self):
-        if not StockExchange.instance:
-            StockExchange.instance = StockExchange.__OnlyOne()
+  // static method to get the singleton instance of StockExchange
+  public static StockExchange getInstance()
+  {
+    if(stockExchangeInstance == null) {
+      stockExchangeInstance = new StockExchange();
+    }
+    return stockExchangeInstance;
+  }
 
-    def place_order(self, order):
-        return_status = self.get_instance().submit_order(Order)
-        return return_status
+  public static boolean placeOrder(Order order) {
+    boolean returnStatus = getInstance().submitOrder(Order);
+    return returnStatus;
+  }
+}
 
 ```
 
 **Order:** To encapsulate all buy or sell orders:
 
-```python
-from abc import ABC
-from datetime import datetime
-from .constants import OrderStatus, TimeEnforcementType
+```java
 
+public abstract class Order {
+  private String orderNumber;
+  public boolean isBuyOrder;
+  private OrderStatus status;
+  private TimeEnforcementType timeEnforcement;
+  private Date creationTime;
 
-class Order(ABC):
-    def __init__(self, id):
-        self.__order_id = id
-        self.__is_buy_order = False
-        self.__status = OrderStatus.OPEN
-        self.__time_enforcement = TimeEnforcementType.ON_THE_OPEN
-        self.__creation_time = datetime.now()
+  private HashMap<Integer, OrderPart> parts;
 
-        self.__parts = {}
+  public void setStatus(OrderStatus status){
+    this.status = status;
+  }
 
-    def set_status(self, status):
-        self.status = status
+  public bool saveInDB() {
+    // save in the database
+  }
 
-    def save_in_DB(self):
-        None
+  public void addOrderParts(OrderParts parts) {
+    for (OrderPart part : parts) {
+      this.parts.put(part.id, part);
+    }
+  }
+}
 
-    # save in the database
+public class LimitOrder extends Order {
+  private double priceLimit;
+}
 
-    def add_order_parts(self, parts):
-        for part in parts:
-            self.parts[part.get_id()] = part
-
-
-class LimitOrder(Order):
-    def __init__(self):
-        self.__price_limit = 0.0
 
 ```
 
 **Member:** Members will be buying and selling stocks:
 
-```python
-from datetime import datetime
-from abc import ABC
-from .constants import OrderStatus, AccountStatus, ReturnStatus
-from .order import LimitOrder
-from .stock_exchange import StockExchange
+```java
 
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter methods and modified only through their public methods function.
 
-class Account(ABC):
-    def __init__(self, id, password, name, address, email, phone, status=AccountStatus.NONE):
-        self.__id = id
-        self.__password = password
-        self.__name = name
-        self.__address = address
-        self.__email = email
-        self.__phone = phone
-        self.__status = AccountStatus.NONE
+public abstract class Account {
+  private String id;
+  private String password;
+  private String name;
+  private AccountStatus status;
+  private Location address;
+  private String email;
+  private String phone;
 
-    def reset_password(self):
-        None
+  public boolean resetPassword();
+}
 
+public class Member extends Account {
+  private double availableFundsForTrading;
+  private Date dateOfMembership;
 
-class Member(Account):
-    def __init__(self):
-        self.__available_funds_for_trading = 0.0
-        self.__date_of_membership = datetime.date.today()
-        self.__stock_positions = {}
-        self.__active_orders = {}
+  private HashMap<string, StockPosition> stockPositions;
 
-    def place_sell_limit_order(self, stock_id, quantity, limit_price, enforcement_type):
-        # check if member has this stock position
-        if stock_id not in self.__stock_positions:
-            return ReturnStatus.NO_STOCK_POSITION
+  private HashMap<Integer, Order> activeOrders;
 
-        stock_position = self.__stock_positions[stock_id]
-        # check if the member has enough quantity available to sell
-        if stock_position.get_quantity() < quantity:
-            return ReturnStatus.INSUFFICIENT_QUANTITY
+  public ErrorCode placeSellLimitOrder(
+    string stockId,
+    float quantity,
+    int limitPrice,
+    TimeEnforcementType enforcementType )
+  {
+    // check if member has this stock position
+    if(!stockPositions.containsKey(stockId)){
+      return NO_STOCK_POSITION;
+    }
 
-        order = LimitOrder(stock_id, quantity, limit_price, enforcement_type)
-        order.is_buy_order = False
-        order.save_in_DB()
-        success = StockExchange.place_order(order)
-        if success:
-            order.set_status(OrderStatus.FAILED)
-            order.save_in_DB()
-        else:
-            self.active_orders.add(order.get_order_id(), order)
-        return success
+    StockPosition stockPosition = stockPositions.get(stockId);
+    // check if the member has enough quantity available to sell
+    if(stockPosition.getQuantity() < quantity){
+      return INSUFFICIENT_QUANTITY;
+    }
 
-    def place_buy_limit_order(self, stock_id, quantity, limit_price, enforcement_type):
-        # check if the member has enough funds to buy this stock
-        if self.__available_funds_for_trading < quantity * limit_price:
-            return ReturnStatus.INSUFFICIENT_FUNDS
+    LimitOrder order =
+      new LimitOrder(stockId, quantity, limitPrice, enforcementType);
+    order.isBuyOrder = false;
+    order.saveInDB();
+    boolean success = StockExchange::placeOrder(order);
+    if(!success){
+      order.setStatus(OrderStatus::FAILED);
+      order.saveInDB();
+    } else {
+      activeOrders.add(orderId, order);
+    }
+    return success;
+  }
 
-        order = LimitOrder(stock_id, quantity, limit_price, enforcement_type)
-        order.is_buy_order = True
-        order.save_in_DB()
-        success = StockExchange.place_order(order)
-        if not success:
-            order.set_status(OrderStatus.FAILED)
-            order.save_in_DB()
-        else:
-            self.active_orders.add(order.get_order_id(), order)
-        return success
+  public ErrorCode placeBuyLimitOrder(
+    string stockId,
+    float quantity,
+    int limitPrice,
+    TimeEnforcementType enforcementType)
+  {
+    // check if the member has enough funds to buy this stock
+    if(availableFundsForTrading < quantity * limitPrice ){
+      return INSUFFICIENT_FUNDS;
+    }
 
-    # this function will be invoked whenever there is an update from
-    # stock exchange against an order
-    def callback_stock_exchange(self, order_id, order_parts, status):
-        order = self.active_orders[order_id]
-        order.add_order_parts(order_parts)
-        order.set_status(status)
-        order.update_in_DB()
+    LimitOrder order =
+      new LimitOrder(stockId, quantity, limitPrice, enforcementType);
+    order.isBuyOrder = true;
+    order.saveInDB();
+    boolean success = StockExchange::placeOrder(order);
+    if(!success){
+      order.setStatus(OrderStatus::FAILED);
+      order.saveInDB();
+    } else {
+      activeOrders.add(orderId, order);
+    }
+    return success;
+  }
 
-        if status == OrderStatus.FILLED or status == OrderStatus.CANCELLEd:
-            self.active_orders.remove(order_id)
+  // this function will be invoked whenever there is an update from
+  // stock exchange against an order
+  public void callbackStockExchange(int orderId, List<OrderPart> orderParts, OrderStatus status) {
+    Order order = activeOrders.get(orderId);
+    order.addOrderParts(orderParts);
+    order.setStatus(status);
+    order.updateInDB();
+
+    if (status == OrderStatus::FILLED || status == OrderStatus::CANCELLEd) {
+      activeOrders.remove(orderId);
+    }
+  }
+}
 
 ```
