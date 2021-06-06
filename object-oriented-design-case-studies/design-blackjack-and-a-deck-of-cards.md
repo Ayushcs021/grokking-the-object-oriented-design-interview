@@ -137,259 +137,291 @@ Here are the main classes of our Blackjack game:
 
 **Enums:** Here are the required enums:
 
-```python
-from enum import Enum
-
-
-class SUIT(Enum):
-    HEART, SPADE, CLUB, DIAMOND = 1, 2, 3, 4
-
+```java
+public enum SUIT {
+  HEART, SPADE, CLUB, DIAMOND
+}
 
 ```
 
 **Card:** The following class encapsulates a playing card:
 
-```python
-class Card:
-    def __init__(self, suit, face_value):
-        self.__suit = suit
-        self.__face_value = face_value
+```java
+public class Card {
+  private SUIT suit;
+  private int faceValue;
 
-    def get_suit(self):
-        return self.__suit
+ public SUIT getSuit() {
+    return suit;
+  }
 
-    def get_face_value(self):
-        return self.__face_value
+  public int getFaceValue() {
+    return faceValue;
+  }
+
+  Card(SUIT suit, int faceValue) {
+    this.suit = suit;
+    this.faceVale = faceValue;
+  }
+}
+
 
 ```
 
 **BlackjackCard:** BlackjackCard extends from Card class to represent a blackjack card:
 
-```python
-from .card import *
+```java
+public class BlackjackCard extends Card {
+  private int gameValue;
 
+  public int getGameValue() {
+    return gameValue;
+  }
 
-class BlackjackCard(Card):
-    def __init__(self, suit, face_value):
-        super().__init__(suit, face_value)
-        self.__game_value = face_value
-        if self.__game_value > 10:
-            self.__game_value = 10
+  public BlackjackCard(SUIT suit, int faceValue) {
+    super(suit, faceValue);
+    this.gameValue = faceValue;
+    if(this.gameValue > 10) {
+      this.gameValue = 10;
+    }
+  }
+}
 
-    def get_game_value(self):
-        return self.__game_value
 
 ```
 
 **Deck and Shoe:** Shoe contains cards from multiple decks:
 
-```python
-import random
-from datetime import datetime
-from .blackjack_card import *
-from .constants import *
+```java
+public class Deck {
+  private List<BlackjackCard> cards;
+  private Date creationDate;
 
+  public Deck() {
+    this.creationDate = new Date();
+    this.cards = new ArrayList<BlackjackCard>();
+    for(int value = 1 ; value <= 13 ; value++){
+      for(SUIT suit : SUIT.values()){
+        this.cards.add(new BlackjackCard(suit, value));
+      }
+    }
+  }
 
-class Deck:
-    def __init__(self):
-        self.__cards = []
-        self.__creation_date = datetime.date.today()
-        for value in range(1, 14):
-            for suit in SUIT:
-                self.__cards.add(BlackjackCard(suit, value))
+  public List<BlackjackCard> getCards() {
+    return cards;
+}
 
-    def get_cards(self):
-        self.__cards
+public class Shoe {
+  private List<BlackjackCard> cards;
+  private int numberOfDecks;
 
+  private void createShoe() {
+    this.cards = new ArrayList<BlackjackCard>();
+    for(int decks = 0 ; decks < numberOfDecks ; decks++){
+      cards.add(new Deck().getCards());
+    }
+  }
 
-class Shoe:
-    def __init__(self, number_of_decks):
-        self.__cards = []
-        self.__number_of_decks = number_of_decks
-        self.create_shoe()
-        self.shuffle()
+  public Shoe(int numberOfDecks) {
+    this.numberOfDecks = numberOfDecks;
+    createShoe();
+    shuffle();
+  }
 
-    def create_shoe(self):
-        for decks in range(0, self.__number_of_decks):
-            self.__cards.add(Deck().get_cards())
+  public void shuffle() {
+    int cardCount = cards.size();
+    Random r = new Random();
+    for (int i = 0; i < cardCount ; i++){
+      int index = r.nextInt(cardCount-i-1);
+      swap(i, index);
+    }
+  }
 
-    def shuffle(self):
-        card_count = self.__cards.size()
-        for i in range(0, card_count):
-            j = random.randrange(0, card_count - i - 1, 1)
-            self.__cards[i], self.__cards[j] = self.__cards[j], self.__cards[i]
+  public void swap(int i, int j) {
+    BlackjackCard temp = cards[i];
+    cards[i] = cards[j];
+    cards[j] = temp;
+  }
 
-    # Get the next card from the shoe
-    def deal_card(self):
-        if self.__cards.size() == 0:
-            self.create_shoe()
-        return self.__cards.remove(0)
-
+  //Get the next card from the shoe
+  public BlackjackCard dealCard() {
+    if(cards.size() == 0 ){
+      createShoe();
+    }
+    return cards.remove(0);
+  }
+}
 
 ```
 
 **Hand:** Hand class encapsulates a blackjack hand which can contain multiple cards:
 
-```python
-class Hand:
-    def __init__(self, blackjack_card1, blackjack_card2):
-        self.__cards = [blackjack_card1, blackjack_card2]
+```java
+public class Hand {
+  private ArrayList<BlackjackCard> cards;
 
-    def get_scores(self):
-        totals = [0]
+  private List<Integer> getScores() {
+    List<Integer> totals = new ArrayList();
+    total.add(0);
 
-        for card in self.__cards:
-            new_totals = []
-            for score in totals:
-                new_totals.add(card.face_value() + score)
-                if card.face_value() == 1:
-                    new_totals.add(11 + score)
+    for (BlackjackCard card : cards) {
+      List<Integer> newTotals = new ArrayList();
+      for (int score : totals) {
+        newTotals.add(card.faceValue() + score);
+        if (card.faceValue() == 1) {
+          newTotals.add(11 + score);
+        }
+      }
+      totals = newTotals;
+    }
+    return totals;
+  }
 
-            totals = new_totals
+  public Hand(BlackjackCard c1, BlackjackCard c2) {
+    this.cards = new ArrayList<BlackjackCard>();
+    this.cards.add(c1);
+    this.cards.add(c2);
+  }
 
-        return totals
+  public void addCard(BlackjackCard card) {
+    cards.add(card);
+  }
 
-    def add_card(self, card):
-        self.__cards.add(card)
-
-    # get highest score which is less than or equal to 21
-    def resolve_score(self):
-        scores = self.get_scores()
-        best_score = 0
-        for score in scores:
-            if score <= 21 and score > best_score:
-                best_score = score
-
-        return best_score
-
+  // get highest score which is less than or equal to 21
+  public int resolveScore() {
+    List<Integer> scores = getScores();
+    int bestScore = 0;
+    for (int score : scores) {
+      if (score <= 21 && score > bestScore) {
+        bestScore = score;
+      }
+    }
+    return bestScore;
+  }
+}
 
 ```
 
 **Player:** Player class extends from BasePlayer:
 
-```python
-from abc import ABC
+```java
+public abstract class BasePlayer {
+  private String id;
+  private String password;
+  private double balance;
+  private AccountStatus status;
+  private Person person;
+  private List<Hand> hands;
 
+  public boolean resetPassword();
 
-class BasePlayer(ABC):
-    def __init__(self, id, password, balance, status, person):
-        self.__id = id
-        self.__password = password
-        self.__balance = balance
-        self.__status = status
-        self.__person = person
-        self.__hands = []
+  public List<Hand> getHands() {
+    return hands;
+  }
 
-    def reset_password(self):
-        None
+  public void addHand(Hand hand) {
+    return hands.add(hand);
+  }
 
-    def get_hands(self):
-        return self.__hands
+  public void removeHand(Hand hand) {
+    hands.remove(hand);
+  }
+}
 
-    def add_hand(self, hand):
-        return self.__hands.add(hand)
+public class Player extends BasePlayer {
+  private int bet;
+  private int totalCash;
 
-    def remove_hand(self, hand):
-        self.__hands.remove(hand)
-
-
-class Player(BasePlayer):
-    def __init__(self, id, password, balance, status, person):
-        super.__init__(id, password, balance, status, person)
-        self.__bet = 0
-        self.__total_cash = 0
-
-
-class Dealer(BasePlayer):
-    def __init__(self, id, password, balance, status, person):
-        super.__init__(id, password, balance, status, person)
-
-
+  public Player(Hand hand) {
+    this.hands = new ArrayList<Hand>();
+    this.hands.add(hand);
+  }
+}
 ```
 
 **Game:** This class encapsulates a blackjack game:
 
-```python
-from .hand import  *
-from .player import *
-from .deck_shoe import *
+```java
+public class Game {
+  private Player player;
+  private Dealer dealer;
+  private Shoe shoe;
+  private final int MAX_NUM_OF_DECKS = 3;
+
+  private void playAction(string action, Hand hand) {
+    switch(action) {
+      case "hit": hit(hand); break;
+      case "split": split(hand); break;
+      case "stand pat": break; //do nothing
+      case "stand": stand(); break;
+      default: print("Wrong input");
+    }
+  }
+
+  private void hit(Hand hand) {
+    hand.addCard(shoe.dealCard());
+  }
+
+  private void stand() {
+    int dealerScore = dealer.getTotalScore();
+    int playerScore = player.getTotalScore();
+    List<Hand> hands = player.getHands();
+    for(Hand hand : hands) {
+      int bestScore = hand.resolveScore();
+      if(playerScore == 21){
+        //blackjack, pay 3:2 of the bet
+      } else if (playerScore > dealerScore) {
+        // pay player equal to the bet
+      } else if (playerScore < dealerScore) {
+        // collect the bet from the player
+      } else { //tie
+        // bet goes back to player
+      }
+    }
+  }
+
+  private void split(Hand hand) {
+    Cards cards = hand.getCards();
+    player.addHand(new Hand(cards[0], shoe.dealCard()));
+    player.addHand(new Hand(cards[1], shoe.dealCard()));
+    player.removeHand(hand);
+  }
 
 
-def get_bet_from_UI():
-    pass
+ public Game(Player player, Dealer dealer) {
+    this.player = player;
+    this.dealer = dealeer;
+    Shoe shoe= new Shoe(MAX_NUM_OF_DECKS);
+  }
 
+  public void start() {
+    player.placeBet(getBetFromUI());
 
-def get_user_action():
-    pass
+    Hand playerHand = new Hand(shoe.dealCard(), shoe.dealCard());
+    player.addToHand(playerHand);
 
+    Hand dealerHand = new Hand(shoe.dealCard(), shoe.dealCard());
+    dealer.addToHand(dealerHand);
 
-class Game:
-    def __init__(self, player, dealer):
-        self.__player = player
-        self.__dealer = dealer
-        self.__MAX_NUM_OF_DECKS = 3
-        self.__shoe = Shoe(self.__MAX_NUM_OF_DECKS)
-
-    def play_action(self, action, hand):
-        switcher = {
-            "hit": self.hit(hand),
-            "split": self.split(hand),
-            "stand pat": None,  # do nothing
-            "stand": self.stand()
+    while(true){
+      List<Hand> hands = player.getHands();
+      for(Hand hand : hands) {
+        string action = getUserAction(hand);
+        playAction(action, hand);
+        if(action.equals("stand")) {
+          break;
         }
-        switcher.get(action, 'Invalid move')
+      }
+    }
+  }
 
-    def hit(self, hand):
-        self.__hand.add_card(self.__shoe.deal_card())
-
-    def stand(self):
-        dealer_score = self.__dealer.get_total_score()
-        player_score = self.__player.get_total_score()
-        hands = self.__player.get_hands()
-        for hand in hands:
-            best_score = hand.resolve_score()
-            if player_score == 21:
-                # blackjack, pay 3: 2 of the bet
-                None
-            elif player_score > dealer_score:
-                # pay player equal to the bet
-                None
-            elif player_score < dealer_score:
-                # collect the bet from the player
-                None
-            else:  # tie
-                # bet goes back to player
-                None
-
-    def split(self, hand):
-        cards = hand.get_cards()
-        self.__player.add_hand(Hand(cards[0], self.__shoe.deal_card()))
-        self.__player.add_hand(Hand(cards[1], self.__shoe.deal_card()))
-        self.__player.remove_hand(hand)
-
-    def start(self):
-        self.__player.place_bet(get_bet_from_UI())
-
-        player_hand = Hand(self.__shoe.deal_card(), self.__shoe.deal_card())
-        self.__player.add_to_hand(player_hand)
-
-        dealer_hand = Hand(self.__shoe.deal_card(), self.__shoe.deal_card())
-        self.__dealer.add_to_hand(dealer_hand)
-
-        while True:
-            hands = self.__player.get_hands()
-            for hand in hands:
-                action = get_user_action(hand)
-                self.play_action(action, hand)
-                if action.equals("stand"):
-                    break
-
-
-def main():
-    player = Player()
-    dealer = Dealer()
-    game = Game(player, dealer)
-    game.start()
+  public static void main(String args[]) {
+    Player player = new Player();
+    Dealer dealer = new Dealer();
+    Game game = new Game(player, dealer);
+    game.start();
+  }
+}
 
 
 ```
