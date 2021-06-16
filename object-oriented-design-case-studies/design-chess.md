@@ -94,180 +94,187 @@ Here is the code for the top use cases.
 
 **Enums, DataTypes, Constants:** Here are the required enums, data types, and constants:
 
-```python
-class PieceType:
-    ROOK = "rook"
-    KNIGHT = "knight"
-    BISHOP = "bishop"
-    QUEEN = "queen"
-    KING = "king"
-    PAWN = "pawn"
+```java
+public enum GameStatus {
+  ACTIVE, BLACK_WIN, WHITE_WIN, FORFEIT, STALEMATE, RESIGNATION
+}
 
+public enum AccountStatus {
+  ACTIVE, CLOSED, CANCELED, BLACKLISTED, NONE
+}
 
-CHESS_BOARD_SIZE = 8
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
-INITIAL_PIECE_SET_SINGLE = [
-    (PieceType.ROOK, 0, 0),
-    (PieceType.KNIGHT, 1, 0),
-    (PieceType.BISHOP, 2, 0),
-    (PieceType.QUEEN, 3, 0),
-    (PieceType.KING, 4, 0),
-    (PieceType.BISHOP, 5, 0),
-    (PieceType.KNIGHT, 6, 0),
-    (PieceType.ROOK, 7, 0),
-    (PieceType.PAWN, 0, 1),
-    (PieceType.PAWN, 1, 1),
-    (PieceType.PAWN, 2, 1),
-    (PieceType.PAWN, 3, 1),
-    (PieceType.PAWN, 4, 1),
-    (PieceType.PAWN, 5, 1),
-    (PieceType.PAWN, 6, 1),
-    (PieceType.PAWN, 7, 1)
-]
+public class Person {
+  private String name;
+  private Address address;
+  private String email;
+  private String phone;
+}
 
 ```
+**Box:**  To encapsulate a cell on the chess board:
+```
+public class Box {
+  private Piece piece;
+  private int x;
+  private int y;
+
+  public Box(int x, int y, Piece piece) {
+    this.setPiece(piece);
+    this.setX(x);
+    this.setY(y);
+  }
+
+  public Piece getPiece() {
+    return this.piece;
+  }
+
+  public void setPiece(Piece p) {
+    this.piece = p;
+  }
+
+  public int getX() {
+    return this.x;
+  }
+
+  public void setX(int x) {
+    this.x = x;
+  }
+
+  public int getY() {
+    return this.y;
+  }
+
+  public void setY(int y) {
+    this.y = y;
+  }
+}
+```
+
 
 **Board:** To encapsulate a cell on the chess board:
 
-```python
-from copy import deepcopy
-from .pieces import Piece, PieceFactory
-from .moves import ChessPosition, MoveCommand
-from .constants import CHESS_BOARD_SIZE, INITIAL_PIECE_SET_SINGLE, PieceType
+```java
+public class Board {
+  Box[][] boxes;
 
+  public Board() {
+    this.resetBoard();
+  }
 
-class ChessBoard:
-    def __init__(self, size=CHESS_BOARD_SIZE):
-        self._size = size
-        self._pieces = []
-        self._white_king_position = None
-        self._black_king_position = None
-        self._initialize_pieces(INITIAL_PIECE_SET_SINGLE)
+  public Box getBox(int x, int y) {
 
-    def _initialize_pieces(self, pieces_setup: list):
-        for piece_tuple in pieces_setup:
-            type = piece_tuple[0]
-            x = piece_tuple[1]
-            y = piece_tuple[2]
+    if (x < 0 || x > 7 || y < 0 || y > 7) {
+      throw new Exception("Index out of bound");
+    }
 
-            piece_white = PieceFactory.create(type, ChessPosition(x, y), Piece.WHITE)
-            if type == PieceType.KING:
-                piece_white.set_board_handle(self)
-            self._pieces.append(piece_white)
+    return boxes[x][y];
+  }
 
-            piece_black = PieceFactory.create(type, ChessPosition(self._size - x - 1, self._size - y - 1), Piece.BLACK)
-            if type == PieceType.KING:
-                piece_black.set_board_handle(self)
-            self._pieces.append(piece_black)
+  public void resetBoard() {
+    // initialize white pieces
+    boxes[0][0] = new Box(new Rook(true), 0, 0);
+    boxes[0][1] = new Box(new Knight(true), 0, 1);
+    boxes[0][2] = new Box(new Bishop(true), 0, 2);
+    //...
+    boxes[1][0] = new Box(new Pawn(true), 1, 0);
+    boxes[1][1] = new Box(new Pawn(true), 1, 1);
+    //...
 
-    def get_piece(self, position: ChessPosition) -> Piece:
-        for piece in self._pieces:
-            if piece.position == position:
-                return piece
-        return None
+    // initialize black pieces
+    boxes[7][0] = new Box(new Rook(false), 7, 0);
+    boxes[7][1] = new Box(new Knight(false), 7, 1);
+    boxes[7][2] = new Box(new Bishop(false), 7, 2);
+    //...
+    boxes[6][0] = new Box(new Pawn(false), 6, 0);
+    boxes[6][1] = new Box(new Pawn(false), 6, 1);
+    //...
 
-    def beam_search_threat(self, start_position: ChessPosition, own_color, increment_x: int, increment_y: int):
-        threatened_positions = []
-        curr_x = start_position.x_coord
-        curr_y = start_position.y_coord
-        curr_x += increment_x
-        curr_y += increment_y
-        while curr_x >= 0 and curr_y >= 0 and curr_x < self._size and curr_y < self._size:
-            curr_position = ChessPosition(curr_x, curr_y)
-            curr_piece = self.get_piece(curr_position)
-            if curr_piece is not None:
-                if curr_piece.color != own_color:
-                    threatened_positions.append(curr_position)
-                break
-            threatened_positions.append(curr_position)
-            curr_x += increment_x
-            curr_y += increment_y
-        return threatened_positions
-
-    def spot_search_threat(self, start_position: ChessPosition, own_color, increment_x: int, increment_y: int,
-                           threat_only=False, free_only=False):
-        curr_x = start_position.x_coord + increment_x
-        curr_y = start_position.y_coord + increment_y
-
-        if curr_x >= self.size or curr_y >= self.size or curr_x < 0 or curr_y < 0:
-            return None
-
-        curr_position = ChessPosition(curr_x, curr_y)
-        curr_piece = self.get_piece(curr_position)
-        if curr_piece is not None:
-            if free_only:
-                return None
-            return curr_position if curr_piece.color != own_color else None
-        return curr_position if not threat_only else None
-
-    @property
-    def pieces(self):
-        return deepcopy(self._pieces)
-
-    @property
-    def size(self):
-        return self._size
-
-    @property
-    def white_king_position(self):
-        return self._white_king_position
-
-    @property
-    def black_king_position(self):
-        return self._black_king_position
-
-    def execute_move(self, command: MoveCommand):
-        source_piece = self.get_piece(command.src)
-        for idx, target_piece in enumerate(self._pieces):
-            if target_piece.position == command.dst:
-                del self._pieces[idx]
-                break
-        source_piece.move(command.dst)
-
-    def register_king_position(self, position: ChessPosition, color: str):
-        if color == Piece.WHITE:
-            self._white_king_position = position
-        elif color == Piece.BLACK:
-            self._black_king_position = position
-        else:
-            raise RuntimeError("Unknown color of the king piece")
-
+    // initialize remaining boxes without any piece
+    for (int i = 2; i < 6; i++) {
+      for (int j = 0; j < 8; j++) {
+        boxes[i][j] = new Box(null, i, j);
+      }
+    }
+  }
+}
 ```
 
 **King:** To encapsulate King as a chess piece:
 
-```python
-from .pieces import Piece
-from .moves import ChessPosition
+```java
+public class King extends Piece {
+  private boolean castlingDone = false;
 
+  public King(boolean white) {
+    super(white);
+  }
 
-class King(Piece):
-    SPOT_INCREMENTS = [(1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1)]
+  public boolean isCastlingDone() {
+    return this.castlingDone == true;
+  }
 
-    def __init__(self, position: ChessPosition, color: str):
-        super().__init__(position, color)
-        self._board_handle = None
+  public void setCastlingDone(boolean castlingDone) {
+    this.castlingDone = castlingDone;
+  }
 
-    def set_board_handle(self, board):
-        self._board_handle = board
-        self._board_handle.register_king_position(self.position, self.color)
+  @Override
+  public boolean canMove(Board board, Box start, Box end) {
+    // we can't move the piece to a box that has a piece of the same color
+    if(end.getPiece().isWhite() == this.isWhite()) {
+      return false;
+    }
 
-    def move(self, target_position: ChessPosition):
-        Piece.move(self, target_position)
-        self._board_handle.register_king_position(target_position, self.color)
+    int x = Math.abs(start.getX() - end.getX());
+    int y = Math.abs(start.getY() - end.getY());
+    if(x + y == 1) {
+      // check if this move will not result in king being attacked, if so return true
+      return true;
+    }
 
-    def get_threatened_positions(self, board):
-        positions = []
-        for increment in King.SPOT_INCREMENTS:
-            positions.append(board.spot_search_threat(self._position, self._color, increment[0], increment[1]))
-        positions = [x for x in positions if x is not None]
-        return positions
+    return this.isValidCastling(board, start, end);
+  }
 
-    def get_moveable_positions(self, board):
-        return self.get_threatened_positions(board)
+  private boolean isValidCastling(Board board, Box start, Box end) {
 
-    def _symbol_impl(self):
-        return 'KI'
+    if(this.isCastlingDone()) {
+      return false;
+    }
+
+    // check for the white king castling
+    if(this.isWhite()
+      && start.getX() == 0 && start.getY() == 4 && end.getY() == 0) {
+        // confirm if white king moved to the correct ending box
+        if (Math.abs(end.getY() - start.getY()) == 2) {
+          // check if there the Rook is in the correct position
+          // check if there is no piece between Rook and the King
+          // check if the King or the Rook has not moved before
+          // check if this move will not result in king being attacked
+          //...
+          this.setCastlingDone(true);
+          return true;
+        }
+    } else {
+      // check for the black king castling
+      this.setCastlingDone(true);
+      return true;
+    }
+
+    return false;
+  }
+
+  public boolean isCastlingMove(Box start, Box end) {
+    // check if the starting and ending position are correct
+  }
+}
+
 
 ```
 
@@ -296,25 +303,25 @@ class Queen(Piece):
 
 **Knight:** To encapsulate Knight as a chess piece:
 
-```python
-from .pieces import Piece
+```java
+public class Knight extends Piece {
+  public Knight(boolean white) {
+    super(white);
+  }
 
+  @Override
+  public boolean canMove(Board board, Box start, Box end) {
 
-class Knight(Piece):
-    SPOT_INCREMENTS = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
+    // we can't move the piece to a box that has a piece of the same color
+    if(end.getPiece().isWhite() == this.isWhite()) {
+      return false;
+    }
 
-    def get_threatened_positions(self, board):
-        positions = []
-        for increment in Knight.SPOT_INCREMENTS:
-            positions.append(board.spot_search_threat(self._position, self._color, increment[0], increment[1]))
-        positions = [x for x in positions if x is not None]
-        return positions
-
-    def get_moveable_positions(self, board):
-        return self.get_threatened_positions(board)
-
-    def _symbol_impl(self):
-        return 'KN'
+    int x = Math.abs(start.getX() - end.getX());
+    int y = Math.abs(start.getY() - end.getY());
+    return x * y == 2;
+  }
+}
 
 ```
 
@@ -412,189 +419,171 @@ class Pawn(Piece):
 
 **Piece:** An abstract class to encapsulate common functionality of all chess pieces:
 
-```python
-from .constants import PieceType
-from .moves import ChessPosition
-from .king import King
-from .queen import Queen
-from .knight import Knight
-from .rook import Rook
-from .bishop import Bishop
-from .pawn import Pawn
+```java
 
+public abstract class Piece {
 
-class Piece:
-    BLACK = "black"
-    WHITE = "white"
+  private boolean killed = false;
+  private boolean white = false;
 
-    def __init__(self, position: ChessPosition, color):
-        self._position = position
-        self._color = color
+  public Piece(boolean white) {
+    this.setWhite(white);
+  }
 
-    @property
-    def position(self):
-        return self._position
+  public boolean isWhite() {
+    return this.white == true;
+  }
 
-    @property
-    def color(self):
-        return self._color
+  public void setWhite(boolean white) {
+    this.white = white;
+  }
 
-    def move(self, target_position):
-        self._position = target_position
+  public boolean isKilled() {
+    return this.killed == true;
+  }
 
-    def get_threatened_positions(self, board):
-        raise NotImplementedError
+  public void setKilled(boolean killed) {
+    this.killed = killed;
+  }
 
-    def get_moveable_positions(self, board):
-        raise NotImplementedError
-
-    def symbol(self):
-        black_color_prefix = '\u001b[31;1m'
-        white_color_prefix = '\u001b[34;1m'
-        color_suffix = '\u001b[0m'
-        retval = self._symbol_impl()
-        if self.color == Piece.BLACK:
-            retval = black_color_prefix + retval + color_suffix
-        else:
-            retval = white_color_prefix + retval + color_suffix
-        return retval
-
-    def _symbol_impl(self):
-        raise NotImplementedError
-
-class PieceFactory:
-    @staticmethod
-    def create(piece_type: str, position: ChessPosition, color):
-        if piece_type == PieceType.KING:
-            return King(position, color)
-        
-        if piece_type == PieceType.QUEEN:
-            return Queen(position, color)
-        
-        if piece_type == PieceType.KNIGHT:
-            return Knight(position, color)
-        
-        if piece_type == PieceType.ROOK:
-            return Rook(position, color)
-        
-        if piece_type == PieceType.BISHOP:
-            return Bishop(position, color)
-        
-        if piece_type == PieceType.PAWN:
-            return Pawn(position, color)
+  public abstract boolean canMove(Board board, Box start, Box end);
+}
 
 ```
 
 **Move:** To encapsulate a chess move:
 
-```python
-class ChessPosition:
-    def __init__(self, x_coord, y_coord):
-        self.x_coord = x_coord
-        self.y_coord = y_coord
+```java
 
-    def __str__(self):
-        return chr(ord("a") + self.x_coord) + str(self.y_coord + 1)
+public class Move {
+  private Player player;
+  private Box start;
+  private Box end;
+  private Piece pieceMoved;
+  private Piece pieceKilled;
+  private boolean castlingMove = false;
 
-    def __eq__(self, other):
-        return self.x_coord == other.x_coord and self.y_coord == other.y_coord
+  public Move(Player player, Box start, Box end){
+    this.player = player;
+    this.start = start;
+    this.end = end;
+    this.pieceMoved = start.getPiece();
+  }
 
-    @staticmethod
-    def from_string(string: str):
-        return ChessPosition(ord(string[0]) - ord("a"), int(string[1:]) - 1)
+  public boolean isCastlingMove() {
+    return this.castlingMove == true;
+  }
 
+  public void setCastlingMove(boolean castlingMove) {
+    this.castlingMove = castlingMove;
+  }
+}
 
-class MoveCommand:
-    def __init__(self, src: ChessPosition, dst: ChessPosition):
-        self.src = src
-        self.dst = dst
-
-    @staticmethod
-    def from_string(string: str):
-        tokens = string.split(" ")
-        if len(tokens) != 2:
-            return None
-        src = ChessPosition.from_string(tokens[0])
-        dst = ChessPosition.from_string(tokens[1])
-        if src is None or dst is None:
-            return None
-        return MoveCommand(src, dst)
 
 ```
 
 **Game:** To encapsulate a chess game:
 
-```python
-from copy import deepcopy
-from .pieces import Piece
-from .render import *
-from .moves import *
-from .board import ChessBoard
+```java
+public class Game {
+  private Player[] players;
+  private Board board;
+  private Player currentTurn;
+  private GameStatus status;
+  private List<Move> movesPlayed;
 
+  private void initialize(Player p1, Player p2) {
+    players[0] = p1;
+    players[1] = p2;
 
-class ChessGameState:
-    def __init__(self, pieces, board_size):
-        self.pieces = pieces
-        self.board_size = board_size
+    board.resetBoard();
 
+    if(p1.isWhiteSide()) {
+      this.currentTurn = p1;
+    } else {
+      this.currentTurn = p2;
+    }
 
-class ChessGame:
-    STATUS_WHITE_MOVE = "white_move"
-    STATUS_BLACK_MOVE = "black_move"
-    STATUS_WHITE_VICTORY = "white_victory"
-    STATUS_BLACK_VICTORY = "black_victory"
+    movesPlayed.clear();
+  }
 
-    def __init__(self, renderer: InputRender = None):
-        self._finished = False
-        self._board = ChessBoard()
-        self._renderer = renderer
-        self._status = ChessGame.STATUS_WHITE_MOVE
+  public boolean isEnd() {
+    return this.getStatus() != GameStatus.ACTIVE;
+  }
 
-    def run(self):
-        self._renderer.render(self.get_game_state())
-        while not self._finished:
-            command = self._parse_command()
-            if command is None and self._renderer is not None:
-                self._renderer.print_line("Invalid command, please re-enter.")
-                continue
-            if not self._try_move(command):
-                self._renderer.print_line("Invalid command, please re-enter.")
-                continue
+  public boolean getStatus() {
+    return this.status;
+  }
 
-            self._board.execute_move(command)
-            if self._status == ChessGame.STATUS_WHITE_MOVE:
-                self._status = ChessGame.STATUS_BLACK_MOVE
-            elif self._status == ChessGame.STATUS_BLACK_MOVE:
-                self._status = ChessGame.STATUS_WHITE_MOVE
-            self._renderer.render(self.get_game_state())
+  public void setStatus(GameStatus status) {
+    this.status = status;
+  }
 
-    def _try_move(self, command: MoveCommand):
-        board_copy = deepcopy(self._board)
-        src_piece = board_copy.get_piece(command.src)
-        if src_piece is None:
-            return False
-        if (self._status == ChessGame.STATUS_WHITE_MOVE and src_piece.color == Piece.BLACK) or \
-                (self._status == ChessGame.STATUS_BLACK_MOVE and src_piece.color == Piece.WHITE):
-            return False
-        if command.dst not in src_piece.get_moveable_positions(board_copy) and \
-                command.dst not in src_piece.get_threatened_positions(board_copy):
-            return False
-        board_copy.execute_move(command)
-        for piece in board_copy.pieces:
-            if self._status == ChessGame.STATUS_WHITE_MOVE and \
-                    board_copy.white_king_position in piece.get_threatened_positions(board_copy):
-                return False
-            elif self._status == ChessGame.STATUS_BLACK_MOVE and \
-                    board_copy.black_king_position in piece.get_threatened_positions(board_copy):
-                return False
-        return True
+  public boolean playerMove(Player player, int startX, int startY, int endX, int endY) {
+      Box startBox = board.getBox(startX, startY);
+      Box endBox = board.getBox(startY, endY);
+      Move move = new Move(player, startBox, endBox);
+      return this.makeMove(move, player);
+  }
 
-    def _parse_command(self):
-        input_ = input()
-        return MoveCommand.from_string(input_)
+  private boolean makeMove(Move move, Player player) {
+    Piece sourcePiece = move.getStart().getPiece();
+    if (sourcePiece == null) {
+      return false;
+    }
 
-    def get_game_state(self):
-        return ChessGameState(self._board.pieces, self._board.size)
+    // valid player
+    if (player != currentTurn) {
+      return false;
+    }
+
+    if (sourcePiece.isWhite() != player.isWhiteSide()) {
+      return false;
+    }
+
+    // valid move?
+    if (!sourcePiece.canMove(board, move.getStart(), move.getEnd())){
+      return false;
+    }
+
+    // kill?
+    Piece destPiece = move.getStart().getPiece();
+    if (destPiece != null) {
+      destPiece.setKilled(true);
+      move.setPieceKilled(destPiece);
+    }
+
+    // castling?
+    if (sourcePiece != null && sourcePiece instanceof King
+        && sourcePiece.isCastlingMove()) {
+      move.setCastlingMove(true);
+    }
+
+    // store the move
+    movesPlayed.add(move);
+
+    // move piece from the stat box to end box
+    move.getEnd().setPiece(move.getStart().getPiece());
+    move.getStart.setPiece(null);
+
+    if (destPiece != null && destPiece instanceof King) {
+      if(player.isWhiteSide()) {
+        this.setStatus(GameStatus.WHITE_WIN);
+      } else {
+        this.setStatus(GameStatus.BLACK_WIN);
+      }
+    }
+
+    // set the current turn to the other player
+    if(this.currentTurn == players[0]) {
+      this.currentTurn = players[1];
+    } else {
+      this.currentTurn = players[0];
+    }
+
+    return true;
+  }
+}
 
 ```
 
@@ -656,20 +645,21 @@ class ConsoleRender(InputRender):
 
 **Player:** To encapsulate a chess player:
 
-```python
-from .render import ConsoleRender
-from .game import ChessGame
+```java
 
+public class Player extends Account{
+  private Person person;
+  private boolean whiteSide = false;
 
-class Player:
-    def play_chess(self):
-        render = ConsoleRender()
-        game = ChessGame(render)
-        game.run()
+  public Player(Person person, boolean whiteSide){
+    this.person = person;
+    this.whiteSide = whiteSide;
+  }
 
+  public boolean isWhiteSide() {
+    return this.whiteSide == true;
+  }
+}
 
-if __name__ == "__main__":
-    player = Player
-    player.play_chess()
 
 ```

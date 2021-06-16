@@ -101,228 +101,212 @@ Here is the high-level definition for the classes described above.
 
 **Enums, data types, and constants:** Here are the required enums, data types, and constants:
 
-```python
-from enum import Enum
+```java
+public class Address {
+  private String streetAddress;
+  private String city;
+  private String state;
+  private String zipCode;
+  private String country;
+}
 
+public class Person {
+  private String name;
+  private Address address;
+  private String email;
+  private String phone;
+}
 
-class Address:
-    def __init__(self, street, city, state, zip_code, country):
-        self.__street_address = street
-        self.__city = city
-        self.__state = state
-        self.__zip_code = zip_code
-        self.__country = country
+public enum MatchFormat {
+  ODI,
+  T20,
+  TEST
+}
 
+public enum MatchResult {
+  LIVE,
+  FINISHED,
+  DRAWN,
+  CANCELED
+}
 
-class Person():
-    def __init__(self, name, address, email, phone):
-        self.__name = name
-        self.__address = address
-        self.__email = email
-        self.__phone = phone
+public enum UmpireType {
+  FIELD,
+  RESERVED,
+  TV
+}
 
+public enum WicketType {
+  BOLD,
+  CAUGHT,
+  STUMPED,
+  RUN_OUT,
+  LBW,
+  RETIRED_HURT,
+  HIT_WICKET,
+  OBSTRUCTING
+}
 
-class MatchFormat(Enum):
-    ODI, T20, TEST = 1, 2, 3
+public enum BallType {
+  NORMAL,
+  WIDE,
+  WICKET,
+  NO_BALL
+}
 
-
-class MatchResult(Enum):
-    LIVE, FINISHED, DRAWN, CANCELLED = 1, 2, 3, 4
-
-
-class UmpireType(Enum):
-    FIELD, RESERVED, TV = 1, 2, 3
-
-
-class WicketType(Enum):
-    BOLD, CAUGHT, STUMPED, RUN_OUT, LBW, RETIRED_HURT, HIT_WICKET, OBSTRUCTING = 1, 2, 3, 4, 5, 6, 7, 8
-
-
-class BallType(Enum):
-    NORMAL, WIDE, WICKET, NO_BALL = 1, 2, 3, 4
-
-
-class RunType(Enum):
-    NORMAL, FOUR, SIX, LEG_BYE, BYE, NO_BALL, OVERTHROW = 1, 2, 3, 4, 5, 6, 7
+public enum RunType {
+  NORMAL,
+  FOUR,
+  SIX,
+  LEG_BYE,
+  BYE,
+  NO_BALL,
+  OVERTHROW
+}
 
 ```
 
 **Admin, Player, Umpire, Referee, and Commentator:** These classes represent the different people that interact with our system:
 
-```python
-# For simplicity, we are not defining getter and setter functions. The reader can
-# assume that all class attributes are private and accessed through their respective
-# public getter methods and modified only through their public methods function.
+```java
+// For simplicity, we are not defining getter and setter functions. The reader can
+// assume that all class attributes are private and accessed through their respective
+// public getter method and modified only through their public setter method.
 
-class Player:
-    def __init__(self, person):
-        self.__person = person
-        self.__contracts = []
+public class Player {
+  private Person person;
+  private ArrayList<PlayerContract> contracts;
 
-    def add_contract(self, contract):
-        None
+  public boolean addContract();
+}
 
+public class Admin {
+  private Person person;
 
-class Admin:
-    def __init__(self, person):
-        self.__person = person
+  public boolean addMatch(Match match);
 
-    def add_match(self, match):
-        None
+  public boolean addTeam(Team team);
 
-    def add_team(self, team):
-        None
+  public boolean addTournament(Tournament tournament);
+}
 
-    def add_tournament(self, tournament):
-        None
+public class Umpire {
+  private Person person;
 
+  public boolean assignMatch(Match match);
+}
 
-class Umpire:
-    def __init__(self, person):
-        self.__person = person
+public class Referee {
+  private Person person;
 
-    def assign_match(self, match):
-        None
+  public boolean assignMatch(Match match);
+}
 
+public class Commentator {
+  private Person person;
 
-class Referee:
-    def __init__(self, person):
-        self.__person = person
-
-    def assign_match(self, match):
-        None
-
-
-class Commentator:
-    def __init__(self, person):
-        self.__person = person
-
-    def assign_match(self, match):
-        None
-
+  public boolean assignMatch(Match match);
+}
 ```
 
 **Team, TournamentSquad, and Playing11:** Team will announce a squad for a tournament, out of which, the playing 11 will be chosen:
 
-```python
-class Team:
-    def __init__(self, name, coach):
-        self.__name = name
-        self.__players = []
-        self.__news = []
-        self.__coach = coach
+```java
+public class Team {
+  private String name;
+  private List<Player> players;
+  private List<News> news;
+  private Coach coach;
 
-    def add_tournament_squad(self, tournament_squad):
-        None
+  public boolean addTournamentSquad(TournamentSquad tournamentSquad);
+  public boolean addPlayer(Player player);
+  public boolean addNews(News news);
+}
 
-    def add_player(self, player):
-        None
+public class TournamentSquad {
+  private List<Player> players;
+  private List<TournamentStat> tournamentStats;
 
-    def add_news(self, news):
-        None
+  public boolean addPlayer(Player player);
+}
 
+public class Playing11 {
+  private List<Player> players;
+  private Player twelfthMan;
 
-class TournamentSquad:
-    def __init__(self):
-        self.__players = []
-        self.__tournament_stats = []
+  public boolean addPlayer(Player player);
+}
 
-    def add_player(self, player):
-        None
-
-
-class Playing11:
-    def __init__(self):
-        self.__players = []
-        self.__twelfth_man = None
-
-    def add_player(self, player):
-        None
 
 ```
 
 **Over, Ball, Wicket, Commentary, Inning, and Match:** Match will be an abstract class, extended by ODI, Test, and T20:
 
-```python
-from datetime import datetime
-from abc import ABC
-from .constants import MatchResult
+```java
+public class Over {
+  private int number;
+  private List<Ball> balls;
 
+  public boolean addBall(Ball ball);
+}
 
-class Over:
-    def __init__(self, number):
-        self.__number = number
-        self.__balls = []
+public class Ball {
+  private Player balledBy;
+  private Player playedBy;
+  private BallType type;
 
-    def add_ball(self, ball):
-        None
+  private Wicket wicket;
+  private List<Run> runs;
+  private Commentary commentary;
 
+}
 
-class Ball:
-    def __init__(self, balled_by, played_by, ball_type, wicket, runs, commentary):
-        self.__balled_by = balled_by
-        self.__played_by = played_by
-        self.__type = ball_type
+public class Wicket {
+  private WicketType wicketType;
+  private Player playerOut;
+  private Player caughtBy;
+  private Player runoutBy;
+  private Player stumpedBy;
+}
 
-        self.__wicket = wicket
-        self.__runs = runs
-        self.__commentary = commentary
+public class Commentary {
+  private String text;
+  private Date createdAt;
+  private Commentator createdBy;
+}
 
+public class Inning {
+  private int number;
+  private Date startTime;
+  private List<Over> overs;
 
-class Wicket:
-    def __init__(self, wicket_type, player_out, caught_by, runout_by, stumped_by):
-        self.__wicket_type = wicket_type
-        self.__player_out = player_out
-        self.__caught_by = caught_by
-        self.__runout_by = runout_by
-        self.__stumped_by = stumped_by
+  public boolean addOver(Over over);
+}
 
+public abstract class Match {
+  private int number;
+  private Date startTime;
+  private MatchResult result;
 
-class Commentary:
-    def __init__(self, text, commentator):
-        self.__text = text
-        self.__created_at = datetime.date.today()
-        self.__created_by = commentator
+  private Playing11[] teams;
+  private List<Inning> innings;
+  private List<Umpire> umpires;
+  private Referee referee;
+  private List<Commentator> commentators;
+  private List<MatchStat> matchStats;
 
+  public boolean assignStadium(Stadium stadium);
 
-class Inning:
-    def __init__(self, number, start_time):
-        self.__number = number
-        self.__start_time = start_time
-        self.__overs = []
+  public boolean assignReferee(Referee referee);
+}
 
-    def add_over(self, over):
-        None
+public class ODI extends Match {
+  //...
+}
 
+public class Test extends Match {
+  //...
+}
 
-# from abc import ABC, abstractmethod
-class Match(ABC):
-    def __init__(self, number, start_time, referee):
-        self.__number = number
-        self.__start_time = start_time
-        self.__result = MatchResult.LIVE
-
-        self.__teams = []
-        self.__innings = []
-        self.__umpires = []
-        self.__referee = referee
-        self.__commentators = []
-        self.__match_stats = []
-
-    def assign_stadium(self, stadium):
-        None
-
-    def assign_referee(self, referee):
-        None
-
-
-class ODI(Match):
-    # ...
-    pass
-
-
-class Test(Match):
-    # ...
-    pass
 
 ```
